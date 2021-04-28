@@ -1,0 +1,6 @@
+all: TextTrader
+TextTrader:TextTrader.cpp INIReader.cpp ini.c
+	g++ -std=c++11 -I. -L. -L/lib64 -o $@ $< -lthostmduserapi_se -lthosttraderapi_se -lthink -lcurses -ltinfo
+clean:
+	rm TextTrader
+
