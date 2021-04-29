@@ -264,6 +264,7 @@ void on_key_pressed(int ch);
 void time_thread();
 void work_thread();
 void HandleTickTimeout();
+void HandleStatusClear();
 
 // Main Board
 void refresh_screen();

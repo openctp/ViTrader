@@ -19,6 +19,7 @@
 #include <condition_variable>
 #include <chrono>
 #include <iostream>
+#include <atomic>
 #include "INIReader.h"
 
 #ifndef WIN32
@@ -112,6 +113,7 @@ int QuoteConnectionStatus=CONNECTION_STATUS_DISCONNECTED;
 std::mutex _lock;
 semaphore _sem;
 std::vector< std::function<void()> > _vTasks;
+std::atomic<int> seconds_delayed;
 
 std::vector<CThostFtdcInvestorPositionField> vInvestorPositions;
 
@@ -379,6 +381,16 @@ void status_print(const char* fmt, ...)
 	va_start(args, fmt);
 	vsnprintf(status_message, sizeof(status_message), fmt, args);
 	va_end(args);
+
+	seconds_delayed = 0; // reset
+	display_status();
+	order_display_status();
+	positionlist_display_status();
+	acclist_display_status();
+	orderlist_display_status();
+	filllist_display_status();
+	column_settings_display_status();
+	symbol_display_status();
 }
 
 int main(int argc,char *argv[])
@@ -690,6 +702,12 @@ void post_task(std::function<void()> task)
 	_vTasks.push_back(task);
 	_lock.unlock();
 	_sem.signal();
+}
+
+void HandleStatusClear()
+{
+	memset(status_message, 0x00, sizeof(status_message));
+	seconds_delayed = 0;
 }
 
 void HandleTickTimeout()
@@ -1851,6 +1869,8 @@ void order_display_status()
 	//}
 	//if(strlen(strsellorders)==0)
 	//	strcpy(strsellorders,"0");
+	move(y - 1, 0);
+	clrtoeol();
 	mvprintw(y - 1, 15, "%s", status_message);
 	mvprintw(y - 1, x - 25, "%s %s", "krenx@qq.com", tradetime);
 	//mvprintw(y-1,x-25,"%s,%s",strbuyorders,strsellorders);
@@ -5704,6 +5724,8 @@ void time_thread()
 {
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::seconds(1));
+		if (seconds_delayed++ >= 3)
+			post_task(std::bind(HandleStatusClear));
 		post_task(std::bind(HandleTickTimeout));
 	}
 }
@@ -7942,7 +7964,7 @@ int on_key_pressed_symbol(int ch)
 
 void CTradeRsp::HandleFrontConnected()
 {
-	status_print("Trade connected.[%s]",user);
+	status_print("交易通道已连接");
 	TradeConnectionStatus=CONNECTION_STATUS_CONNECTED;
 	display_status();
 
@@ -7970,7 +7992,7 @@ void CTradeRsp::HandleFrontConnected()
 }
 void CTradeRsp::HandleFrontDisconnected(int nReason)
 {
-	status_print("Trade disconnected.[%s]",user);
+	status_print("交易通道已断开");
 	TradeConnectionStatus=CONNECTION_STATUS_DISCONNECTED;
 	switch(working_window){
 	case WIN_MAINBOARD:
@@ -8004,12 +8026,13 @@ void CTradeRsp::HandleFrontDisconnected(int nReason)
 void CTradeRsp::HandleRspAuthenticate(CThostFtdcRspAuthenticateField& RspAuthenticateField, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0)
-		status_print("Trade Authenticate failed.[%s][%s]",user,RspInfo.ErrorMsg);
+		status_print("%s终端认证失败:%s", user, RspInfo.ErrorMsg);
 	else
-		status_print("Trade Authenticate succeeded.[%s]",user);
+		status_print("%s终端认证成功.", user);
 
 	CThostFtdcReqUserLoginField Req;
 	
+	memset(&Req,0x00,sizeof(Req));
 	strcpy(Req.BrokerID,broker);
 	strcpy(Req.UserID,user);
 	strcpy(Req.Password,passwd);
@@ -8020,12 +8043,12 @@ void CTradeRsp::HandleRspAuthenticate(CThostFtdcRspAuthenticateField& RspAuthent
 void CTradeRsp::HandleRspUserLogin(CThostFtdcRspUserLoginField& RspUserLogin,CThostFtdcRspInfoField& RspInfo,int nRequestID,bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0){
-		status_print("Trade login failed.[%s][%s]",user,RspInfo.ErrorMsg);
+		status_print("%s登录失败:%s",user,RspInfo.ErrorMsg);
 		TradeConnectionStatus=CONNECTION_STATUS_LOGINFAILED;
 		display_status();
 		return;
 	}
-	status_print("Trade login succeeded.[%s]",user);
+	status_print("%s登录成功.",user);
 
 	// Clear Order Operations
 // 	vInputingOrders.clear();
@@ -8079,7 +8102,7 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 	int i;
 
 	if(RspInfo.ErrorID!=0){
-		status_print("HandleRspQryInstrument failed.[%s][%s]",user,RspInfo.ErrorMsg);
+		status_print("查询合约失败:%s",RspInfo.ErrorMsg);
 		return;
 	}
 
@@ -8136,6 +8159,7 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 
 	if(vquotes.size()==0 || !bIsLast)
 		return;
+	status_print("查询合约成功.");
 // 	char **ppInstrumentID;
 // 	int i;
 // 	ppInstrumentID=(char**)malloc(vquotes.size()*sizeof(char*));
@@ -8154,7 +8178,7 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 void CTradeRsp::HandleRspQryDepthMarketData(CThostFtdcDepthMarketDataField& DepthMarketData, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0){
-		status_print("HandleRspQryDepthMarketData failed.[%s][%s]",user,RspInfo.ErrorMsg);
+		status_print("查询行情失败:%s",RspInfo.ErrorMsg);
 		return;
 	}
 	std::vector<quotation_t>::iterator iter;
@@ -8183,6 +8207,7 @@ void CTradeRsp::HandleRspQryDepthMarketData(CThostFtdcDepthMarketDataField& Dept
 
 	if(!bIsLast)
 		return;
+	status_print("查询行情成功.");
 	// 	char **ppInstrumentID;
 	// 	int i;
 	// 	ppInstrumentID=(char**)malloc(vquotes.size()*sizeof(char*));
@@ -8212,6 +8237,7 @@ void CTradeRsp::HandleRspQryDepthMarketData(CThostFtdcDepthMarketDataField& Dept
 void CTradeRsp::HandleRspQryOrder(CThostFtdcOrderField& Order, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0){
+		status_print("查询订单失败:%s", RspInfo.ErrorMsg);
 		return;
 	}
 	std::vector<CThostFtdcOrderField>::iterator iter;
@@ -8235,6 +8261,7 @@ void CTradeRsp::HandleRspQryOrder(CThostFtdcOrderField& Order, CThostFtdcRspInfo
 	
 	if(!bIsLast)
 		return;
+	status_print("查询订单成功.");
 	CThostFtdcQryTradeField Req;
 	int r=0;
 	
@@ -8247,6 +8274,7 @@ void CTradeRsp::HandleRspQryOrder(CThostFtdcOrderField& Order, CThostFtdcRspInfo
 void CTradeRsp::HandleRspQryTrade(CThostFtdcTradeField& Trade, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0){
+		status_print("查询成交单失败:%s",RspInfo.ErrorMsg);
 		return;
 	}
 	std::vector<CThostFtdcTradeField>::iterator iter;
@@ -8270,12 +8298,13 @@ void CTradeRsp::HandleRspQryTrade(CThostFtdcTradeField& Trade, CThostFtdcRspInfo
 	
 	if(!bIsLast)
 		return;
+	status_print("查询成交单成功.");
 }
 
 void CTradeRsp::HandleRspOrderInsert(CThostFtdcInputOrderField& InputOrder, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0){
-		status_print("Trade OnRspOrderInsert failed.[%s][%d:%s]",this->user,RspInfo.ErrorID,RspInfo.ErrorMsg);
+		status_print("报单失败:%s",RspInfo.ErrorMsg);
 		std::vector<CThostFtdcOrderField>::iterator iter;
 		for(iter=vOrders.begin();iter!=vOrders.end();iter++){
 			if(iter->FrontID==TradeFrontID && iter->SessionID==TradeSessionID && strcmp(iter->OrderRef,InputOrder.OrderRef)==0){
@@ -8329,7 +8358,7 @@ void CTradeRsp::HandleRspOrderInsert(CThostFtdcInputOrderField& InputOrder, CTho
 void CTradeRsp::HandleRspOrderAction(CThostFtdcInputOrderActionField& InputOrderAction, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0){
-		status_print("Trade OnRspOrderAction failed.[%s][%d:%s]",this->user,RspInfo.ErrorID,RspInfo.ErrorMsg);
+		status_print("撤单失败:%s",RspInfo.ErrorMsg);
 		std::vector<CThostFtdcInputOrderActionField>::iterator iter;
 		for(iter=vCancelingOrders.begin();iter!=vCancelingOrders.end();iter++){
 			if(strcmp(iter->InstrumentID,InputOrderAction.InstrumentID)==0 && iter->FrontID==InputOrderAction.FrontID && iter->SessionID==InputOrderAction.SessionID && strcmp(iter->OrderRef,InputOrderAction.OrderRef)==0){
@@ -8372,12 +8401,14 @@ void CTradeRsp::HandleRspOrderAction(CThostFtdcInputOrderActionField& InputOrder
 void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& InvestorPosition, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0){
+		status_print("查询持仓失败:%s", RspInfo.ErrorMsg);
 		return;
 	}
 	if(strlen(InvestorPosition.InstrumentID)>0)
 		vInvestorPositions.push_back(InvestorPosition);
 	if(!bIsLast)
 		return;
+	status_print("查询持仓成功.");
 
 	// 清空持仓
 	positionlist_reset(user);
@@ -8623,8 +8654,11 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 void CTradeRsp::HandleRspQryTradingAccount(CThostFtdcTradingAccountField& TradingAccount, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0){
+		status_print("查询资金失败:%s", RspInfo.ErrorMsg);
 		return;
 	}
+	status_print("查询资金成功.");
+
 	std::vector<stAccount_t>::iterator iter;
 	for(iter=vAccounts.begin();iter!=vAccounts.end();iter++){
 		if(strcmp(TradingAccount.AccountID,iter->AccID)==0){
@@ -8655,7 +8689,34 @@ void CTradeRsp::HandleRspQryTradingAccount(CThostFtdcTradingAccountField& Tradin
 
 void CTradeRsp::HandleRtnOrder(CThostFtdcOrderField& Order)
 {
-	status_print( "OnRtnOrder.[%s] %s %.2f x %d手", Order.InstrumentID, Order.Direction == THOST_FTDC_D_Buy?"买入":"卖出", Order.LimitPrice, Order.VolumeTotalOriginal-Order.VolumeTraded, Order.StatusMsg);
+	char action[10];
+	if (Order.Direction == THOST_FTDC_D_Buy && Order.CombOffsetFlag[0] == THOST_FTDC_OF_Open)
+		strcpy(action, "买开");
+	else if (Order.Direction == THOST_FTDC_D_Buy && Order.CombOffsetFlag[0] == THOST_FTDC_OF_CloseToday)
+		strcpy(action, "买平今");
+	else if (Order.Direction == THOST_FTDC_D_Sell && Order.CombOffsetFlag[0] == THOST_FTDC_OF_Open)
+		strcpy(action, "卖开");
+	else if (Order.Direction == THOST_FTDC_D_Sell && Order.CombOffsetFlag[0] == THOST_FTDC_OF_CloseToday)
+		strcpy(action, "卖平今");
+	else if (Order.Direction == THOST_FTDC_D_Buy)
+		strcpy(action, "买平");
+	else
+		strcpy(action, "卖平");
+
+	char order_status[20];
+	if (Order.OrderStatus == THOST_FTDC_OST_AllTraded)
+		strcpy(order_status, "全部成交");
+	else if (Order.OrderStatus == THOST_FTDC_OST_Canceled)
+		strcpy(order_status, "已撤消");
+	else if (Order.OrderStatus == THOST_FTDC_OST_Unknown)
+		strcpy(order_status, "申报中");
+	else if (Order.OrderStatus == THOST_FTDC_OST_NoTradeQueueing)
+		strcpy(order_status, "已报入");
+	else if (Order.OrderStatus == THOST_FTDC_OST_PartTradedQueueing)
+		strcpy(order_status, "部分成交");
+	else
+		strcpy(order_status, "未知");
+	status_print( "%s %.2f %s %d手 %s. %s", Order.InstrumentID, Order.LimitPrice, action, Order.VolumeTotalOriginal-Order.VolumeTraded, order_status, Order.StatusMsg);
 
 	std::vector<CThostFtdcOrderField>::iterator iter;
 	std::vector<stPosition_t>::iterator iterPosi;
@@ -8853,7 +8914,20 @@ void CTradeRsp::HandleRtnOrder(CThostFtdcOrderField& Order)
 
 void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 {
-	status_print( "OnRtnTrade.[%s] %s成交 %.2f x %d手", Trade.InstrumentID, Trade.Direction == THOST_FTDC_D_Buy ? "买入" : "卖出", Trade.Price, Trade.Volume);
+	char action[10];
+	if (Trade.Direction == THOST_FTDC_D_Buy && Trade.OffsetFlag == THOST_FTDC_OF_Open)
+		strcpy(action, "买开");
+	else if (Trade.Direction == THOST_FTDC_D_Buy && Trade.OffsetFlag == THOST_FTDC_OF_CloseToday)
+		strcpy(action, "买平今");
+	else if (Trade.Direction == THOST_FTDC_D_Sell && Trade.OffsetFlag == THOST_FTDC_OF_Open)
+		strcpy(action, "卖开");
+	else if (Trade.Direction == THOST_FTDC_D_Sell && Trade.OffsetFlag == THOST_FTDC_OF_CloseToday)
+		strcpy(action, "卖平今");
+	else if (Trade.Direction == THOST_FTDC_D_Buy)
+		strcpy(action, "买平");
+	else
+		strcpy(action, "卖平");
+	status_print( "%s %.2f %s 成交 %d手", Trade.InstrumentID, Trade.Price, action, Trade.Volume);
 	// 	std::vector<CThostFtdcTradeField>::iterator iter;
 	if(strlen(Trade.InstrumentID)!=0){
 // 		for(iter=vFilledOrders.begin();iter!=vFilledOrders.end();iter++){
@@ -8941,7 +9015,7 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 void CTradeRsp::HandleErrRtnOrderInsert(CThostFtdcInputOrderField& InputOrder, CThostFtdcRspInfoField& RspInfo)
 {
 	if(RspInfo.ErrorID!=0){
-		status_print("Trade OnErrRtnOrderInsert.[%d:%s]",RspInfo.ErrorID,RspInfo.ErrorMsg);
+		status_print("报单拒绝:%s",RspInfo.ErrorID,RspInfo.ErrorMsg);
 		std::vector<CThostFtdcOrderField>::iterator iter;
 		for(iter=vOrders.begin();iter!=vOrders.end();iter++){
 			if(iter->FrontID==TradeFrontID && iter->SessionID==TradeSessionID && strcmp(iter->OrderRef,InputOrder.OrderRef)==0){
@@ -8993,7 +9067,7 @@ void CTradeRsp::HandleErrRtnOrderInsert(CThostFtdcInputOrderField& InputOrder, C
 void CTradeRsp::HandleErrRtnOrderAction(CThostFtdcOrderActionField& OrderAction, CThostFtdcRspInfoField& RspInfo)
 {
 	if(strlen(OrderAction.InstrumentID)>0){
-		status_print("Trade OnErrRtnOrderAction.[%s]",OrderAction.StatusMsg);
+		status_print("撤单拒绝:[%s]",OrderAction.StatusMsg);
 		std::vector<CThostFtdcInputOrderActionField>::iterator iter;
 		for(iter=vCancelingOrders.begin();iter!=vCancelingOrders.end();iter++){
 			if(strcmp(iter->InstrumentID,OrderAction.InstrumentID)==0 && iter->FrontID==OrderAction.FrontID && iter->SessionID==OrderAction.SessionID && strcmp(iter->OrderRef,OrderAction.OrderRef)==0){
@@ -9028,7 +9102,7 @@ void CTradeRsp::HandleErrRtnOrderAction(CThostFtdcOrderActionField& OrderAction,
 // Quote
 void CQuoteRsp::HandleFrontConnected()
 {
-	status_print("Quote connected.[%s]",user);
+	status_print("行情通道已连接.");
 	int i;
 
 	QuoteConnectionStatus=CONNECTION_STATUS_CONNECTED;
@@ -9046,7 +9120,7 @@ void CQuoteRsp::HandleFrontConnected()
 }
 void CQuoteRsp::HandleFrontDisconnected(int nReason)
 {
-	status_print("Quote disconnected.[%s]",user);
+	status_print("行情通道已断开.");
 	QuoteConnectionStatus=CONNECTION_STATUS_DISCONNECTED;
 	switch(working_window){
 	case WIN_MAINBOARD:
@@ -9080,12 +9154,12 @@ void CQuoteRsp::HandleFrontDisconnected(int nReason)
 void CQuoteRsp::HandleRspUserLogin(CThostFtdcRspUserLoginField& RspUserLogin,CThostFtdcRspInfoField& RspInfo,int nRequestID,bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0){
-		status_print("Quote login failed.[%s]",RspInfo.ErrorMsg);
+		status_print("行情通道登录失败:%s",RspInfo.ErrorMsg);
 		QuoteConnectionStatus=CONNECTION_STATUS_LOGINFAILED;
 		display_status();
 		return;
 	}
-	status_print("Quote login succeeded.[%s]",this->user);
+	status_print("行情通道登录成功.");
 	QuoteConnectionStatus=CONNECTION_STATUS_LOGINOK;
 	display_status();
 
