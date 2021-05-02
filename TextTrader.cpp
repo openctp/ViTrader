@@ -2496,7 +2496,7 @@ void order_display_orders_at_price(double price)
 		if(strcmp(iter->InvestorID,order_curr_accname)!=0 ||strcmp(iter->InstrumentID,vquotes[order_symbol_index].product_id)!=0 || iter->OrderStatus==THOST_FTDC_OST_AllTraded || iter->OrderStatus==THOST_FTDC_OST_Canceled)
 			continue;
 		if(fabs(iter->LimitPrice-price)<error_amount){
-			if(iter->OrderStatus==THOST_FTDC_OST_NoTradeQueueing || iter->OrderStatus==THOST_FTDC_OST_PartTradedNotQueueing){
+			if(iter->OrderStatus==THOST_FTDC_OST_NoTradeQueueing || iter->OrderStatus== THOST_FTDC_OST_PartTradedQueueing){
 				if(iter->Direction==THOST_FTDC_D_Buy)
 					buy_quantity+=iter->VolumeTotal;
 				else
