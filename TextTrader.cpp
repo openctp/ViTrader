@@ -21,6 +21,7 @@
 #include <iostream>
 #include <atomic>
 #include "INIReader.h"
+#include <string.h>
 
 #ifndef WIN32
 #define strnicmp strncasecmp
