@@ -1,6 +1,6 @@
 all: TextTrader
-TextTrader:TextTrader.cpp  INIReader.cpp ini.c
-	g++ -std=c++11 -Wno-invalid-source-encoding -I. -L. -L/usr/local/lib -o $@ $< -lthostmduserapi_se -lthosttraderapi_se -lthink -lcurses -lboost_system -lboost_thread -lboost_program_options -lstdc++
+TextTrader:
+	g++ -std=c++11 -Wno-invalid-source-encoding -I. -L. -L/usr/local/lib -o $@ TextTrader.cpp INIReader.cpp ini.cpp thostmduserapi_se.dylib thosttraderapi_se.dylib -lcurses -lstdc++
 
 clean:
 	rm TextTrader
