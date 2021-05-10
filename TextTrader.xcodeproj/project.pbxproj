@@ -1,0 +1,263 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F64758FB26498E000055FD2D /* ini.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F64758F826498E000055FD2D /* ini.cpp */; };
+		F64758FC26498E000055FD2D /* INIReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F64758F926498E000055FD2D /* INIReader.cpp */; };
+		F64758FD26498E000055FD2D /* TextTrader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F64758FA26498E000055FD2D /* TextTrader.cpp */; };
+		F647590026498E240055FD2D /* thostmduserapi_se.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F64758FE26498E240055FD2D /* thostmduserapi_se.dylib */; };
+		F647590126498E240055FD2D /* thosttraderapi_se.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F64758FF26498E240055FD2D /* thosttraderapi_se.dylib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F64758E626498CF10055FD2D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		F64758E826498CF10055FD2D /* TextTrader */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TextTrader; sourceTree = BUILT_PRODUCTS_DIR; };
+		F64758F526498E000055FD2D /* ini.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ini.h; sourceTree = "<group>"; };
+		F64758F626498E000055FD2D /* INIReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = INIReader.h; sourceTree = "<group>"; };
+		F64758F726498E000055FD2D /* TextTrader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextTrader.h; sourceTree = "<group>"; };
+		F64758F826498E000055FD2D /* ini.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ini.cpp; sourceTree = "<group>"; };
+		F64758F926498E000055FD2D /* INIReader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = INIReader.cpp; sourceTree = "<group>"; };
+		F64758FA26498E000055FD2D /* TextTrader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextTrader.cpp; sourceTree = "<group>"; };
+		F64758FE26498E240055FD2D /* thostmduserapi_se.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = thostmduserapi_se.dylib; sourceTree = "<group>"; };
+		F64758FF26498E240055FD2D /* thosttraderapi_se.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = thosttraderapi_se.dylib; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F64758E526498CF10055FD2D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F647590126498E240055FD2D /* thosttraderapi_se.dylib in Frameworks */,
+				F647590026498E240055FD2D /* thostmduserapi_se.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F64758DF26498CF10055FD2D = {
+			isa = PBXGroup;
+			children = (
+				F64758FE26498E240055FD2D /* thostmduserapi_se.dylib */,
+				F64758FF26498E240055FD2D /* thosttraderapi_se.dylib */,
+				F64758F426498D910055FD2D /* MiniTrader */,
+				F64758E926498CF10055FD2D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F64758E926498CF10055FD2D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F64758E826498CF10055FD2D /* TextTrader */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F64758F426498D910055FD2D /* MiniTrader */ = {
+			isa = PBXGroup;
+			children = (
+				F64758F526498E000055FD2D /* ini.h */,
+				F64758F626498E000055FD2D /* INIReader.h */,
+				F64758F726498E000055FD2D /* TextTrader.h */,
+				F64758F826498E000055FD2D /* ini.cpp */,
+				F64758F926498E000055FD2D /* INIReader.cpp */,
+				F64758FA26498E000055FD2D /* TextTrader.cpp */,
+			);
+			name = MiniTrader;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F64758E726498CF10055FD2D /* TextTrader */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F64758F126498CF10055FD2D /* Build configuration list for PBXNativeTarget "TextTrader" */;
+			buildPhases = (
+				F64758E426498CF10055FD2D /* Sources */,
+				F64758E526498CF10055FD2D /* Frameworks */,
+				F64758E626498CF10055FD2D /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TextTrader;
+			productName = TextTrader;
+			productReference = F64758E826498CF10055FD2D /* TextTrader */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F64758E026498CF10055FD2D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+				ORGANIZATIONNAME = "___FULLUSERNAME___";
+			};
+			buildConfigurationList = F64758E326498CF10055FD2D /* Build configuration list for PBXProject "TextTrader" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = F64758DF26498CF10055FD2D;
+			productRefGroup = F64758E926498CF10055FD2D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F64758E726498CF10055FD2D /* TextTrader */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F64758E426498CF10055FD2D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F64758FD26498E000055FD2D /* TextTrader.cpp in Sources */,
+				F64758FB26498E000055FD2D /* ini.cpp in Sources */,
+				F64758FC26498E000055FD2D /* INIReader.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		F64758EF26498CF10055FD2D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		F64758F026498CF10055FD2D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		F64758F226498CF10055FD2D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				OTHER_LDFLAGS = "-lcurses";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		F64758F326498CF10055FD2D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				OTHER_LDFLAGS = "-lcurses";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F64758E326498CF10055FD2D /* Build configuration list for PBXProject "TextTrader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F64758EF26498CF10055FD2D /* Debug */,
+				F64758F026498CF10055FD2D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F64758F126498CF10055FD2D /* Build configuration list for PBXNativeTarget "TextTrader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F64758F226498CF10055FD2D /* Debug */,
+				F64758F326498CF10055FD2D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F64758E026498CF10055FD2D /* Project object */;
+}
