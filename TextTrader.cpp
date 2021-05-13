@@ -9221,6 +9221,11 @@ void CQuoteRsp::HandleRtnDepthMarketData(CThostFtdcDepthMarketDataField& DepthMa
 			vquotes[i].settle=DepthMarketData.SettlementPrice;
 			vquotes[i].openint=DepthMarketData.OpenInterest;
 			vquotes[i].average_price=DepthMarketData.AveragePrice;
+			vquotes[i].high_limit=DepthMarketData.UpperLimitPrice;
+			vquotes[i].low_limit=DepthMarketData.LowerLimitPrice;
+			vquotes[i].prev_settle=DepthMarketData.PreSettlementPrice;
+			vquotes[i].prev_close=DepthMarketData.PreClosePrice;
+			vquotes[i].prev_openint=DepthMarketData.PreOpenInterest;
 			if(strcmp(vquotes[i].exchange_id,"CZCE")!=0)
 				vquotes[i].average_price/=vquotes[i].multiple;
 			break;
