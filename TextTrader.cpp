@@ -179,7 +179,11 @@ column_item_t column_items[]={
 #define COL_PREV_OPENINT	18		// 昨仓
 	{"昨仓",		10},
 #define COL_AVERAGE_PRICE	19		// 均价
-	{"均价",		10}
+	{"均价",		10},
+#define COL_HIGH_LIMIT		20		// 涨停价
+	{"涨停",		10},
+#define COL_LOW_LIMIT		21		// 跌停价
+	{"跌停",		10}
 };
 std::vector<int> vcolumns;	// columns in order
 std::map<int,bool> mcolumns;	// column select status
@@ -479,6 +483,8 @@ int main(int argc,char *argv[])
 	mcolumns[COL_BID_VOLUME]=true;vcolumns.push_back(COL_BID_VOLUME);
 	mcolumns[COL_ASK_PRICE]=true;vcolumns.push_back(COL_ASK_PRICE);
 	mcolumns[COL_ASK_VOLUME]=true;vcolumns.push_back(COL_ASK_VOLUME);
+	mcolumns[COL_HIGH_LIMIT] = true; vcolumns.push_back(COL_HIGH_LIMIT);
+	mcolumns[COL_LOW_LIMIT] = true; vcolumns.push_back(COL_LOW_LIMIT);
 	mcolumns[COL_PREV_SETTLEMENT]=true;vcolumns.push_back(COL_PREV_SETTLEMENT);
 	mcolumns[COL_ADVANCE]=true;vcolumns.push_back(COL_ADVANCE);
 	mcolumns[COL_OPEN]=true;vcolumns.push_back(COL_OPEN);
@@ -1541,6 +1547,20 @@ void display_quotation(const char *product_id)
 		case COL_ASK_VOLUME:		//volume
 			mvprintw(y,x,"%*d",column_items[COL_ASK_VOLUME].width,vquotes[i].sell_quantity);
 			x+=column_items[COL_ASK_VOLUME].width+1;
+			break;
+		case COL_HIGH_LIMIT:		//high limit
+			if (vquotes[i].high_limit == DBL_MAX)
+				mvprintw(y, x, "%*c", column_items[COL_HIGH_LIMIT].width, '-');
+			else
+				mvprintw(y, x, "%*.*f", column_items[COL_HIGH_LIMIT].width, vquotes[i].precision, vquotes[i].high_limit);
+			x += column_items[COL_HIGH_LIMIT].width + 1;
+			break;
+		case COL_LOW_LIMIT:		//low limit
+			if (vquotes[i].low_limit == DBL_MAX)
+				mvprintw(y, x, "%*c", column_items[COL_LOW_LIMIT].width, '-');
+			else
+				mvprintw(y, x, "%*.*f", column_items[COL_LOW_LIMIT].width, vquotes[i].precision, vquotes[i].low_limit);
+			x += column_items[COL_LOW_LIMIT].width + 1;
 			break;
 		case COL_OPEN:		//close
 			if(vquotes[i].open_price==DBL_MAX)
@@ -5479,6 +5499,14 @@ void display_title()
 		case COL_ASK_VOLUME:		//volume
 			mvprintw(y,x,"%*s",column_items[COL_ASK_VOLUME].width,column_items[COL_ASK_VOLUME].name);
 			x+=column_items[COL_ASK_VOLUME].width+1;
+			break;
+		case COL_HIGH_LIMIT:		//high limit
+			mvprintw(y, x, "%*s", column_items[COL_HIGH_LIMIT].width, column_items[COL_HIGH_LIMIT].name);
+			x += column_items[COL_HIGH_LIMIT].width + 1;
+			break;
+		case COL_LOW_LIMIT:		//low limit
+			mvprintw(y, x, "%*s", column_items[COL_LOW_LIMIT].width, column_items[COL_LOW_LIMIT].name);
+			x += column_items[COL_LOW_LIMIT].width + 1;
 			break;
 		case COL_OPEN:		//close
 			mvprintw(y,x,"%*s",column_items[COL_OPEN].width,column_items[COL_OPEN].name);
