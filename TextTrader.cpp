@@ -332,11 +332,11 @@ int curr_pos=0,curr_col_pos=2;
 int order_curr_line=0,order_curr_col=0,order_max_lines,order_max_cols=9;
 int order_curr_pos=0,order_curr_pos_ask=-1,order_curr_pos_bid=-1;
 int order_symbol_index=-1;
-double order_page_top_price=0,order_curr_price=0;
+double order_page_top_price=DBL_MAX,order_curr_price= DBL_MAX;
 char order_curr_product_id[30];
 char order_curr_accname[100];
 char order_last_symbol[30];
-double order_moving_at_price=0;
+double order_moving_at_price= DBL_MAX;
 int order_is_moving=0;
 
 // Column Settings Curses
@@ -2083,7 +2083,7 @@ void order_goto_file_top()
 	double low_limit=vquotes[order_symbol_index].low_limit;
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	order_page_top_price=high_limit;
 	order_curr_price=high_limit;
@@ -2100,10 +2100,10 @@ void order_goto_file_bottom()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	order_curr_price=low_limit;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2124,9 +2124,9 @@ void order_goto_page_top()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2144,9 +2144,9 @@ void order_goto_page_bottom()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2166,9 +2166,9 @@ void order_goto_page_middle()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2190,9 +2190,9 @@ void order_scroll_forward_1_line()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2200,7 +2200,7 @@ void order_scroll_forward_1_line()
 		if(order_page_top_price>=low_limit+error_amount)
 			order_page_top_price-=min_movement;
 	}
-	if(order_curr_price==DBL_MAX || order_curr_price==0){
+	if(order_curr_price==DBL_MAX){
 		order_curr_price=high_limit;
 	}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
 		order_curr_price=high_limit;
@@ -2221,9 +2221,9 @@ void order_scroll_backward_1_line()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2232,7 +2232,7 @@ void order_scroll_backward_1_line()
 	}else{
 		order_page_top_price+=min_movement;
 	}
-	if(order_curr_price==DBL_MAX || order_curr_price==0){
+	if(order_curr_price==DBL_MAX){
 		order_curr_price=high_limit;
 	}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
 		order_curr_price=high_limit;
@@ -2281,18 +2281,23 @@ void order_centralize_current_price()
 	double low_limit=vquotes[order_symbol_index].low_limit;
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double close_price=vquotes[order_symbol_index].price;
+	double prev_close = vquotes[order_symbol_index].prev_close;
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0 || prev_settle==DBL_MAX || prev_settle==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(close_price==DBL_MAX || close_price==0){
+	order_curr_price = close_price;
+
+	if(order_curr_price == DBL_MAX){
 		// centralize to prev_settle
-		order_curr_price=prev_settle;
-	}else{
-		// centralize to close_price
-		order_curr_price=close_price;
+		order_curr_price= prev_close;
 	}
+	if (order_curr_price == DBL_MAX) {
+		// centralize to prev_settle
+		order_curr_price = prev_settle;
+	}
+
 	if((order_page_top_price=order_curr_price+order_max_lines/2*min_movement)>=high_limit+error_amount)
 		order_page_top_price=high_limit;
 	order_redraw();
@@ -2452,9 +2457,9 @@ void order_display_prices()
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2482,7 +2487,7 @@ void order_display_orders()
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 
 	int i;
@@ -2503,7 +2508,7 @@ void order_display_orders_at_price(double price)
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	if(price>=high_limit+error_amount || price<=low_limit-error_amount)	//不显示范围外的报单
 		return;
@@ -2616,9 +2621,9 @@ void order_display_bid_ask()
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	int nLine;
 		
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2713,14 +2718,14 @@ void order_display_focus()
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	int nLine;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
 	}
-	if(order_curr_price==DBL_MAX || order_curr_price==0){
+	if(order_curr_price==DBL_MAX){
 		order_curr_price=high_limit;
 	}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
 		order_curr_price=high_limit;
@@ -2732,7 +2737,7 @@ void order_display_focus()
 		mvchgat(order_curr_line+1,44,10,A_REVERSE,0,NULL);
 	}
 	//mvchgat(order_curr_line+1,0,-1,A_REVERSE,0,NULL);
-	if(close_price!=DBL_MAX && close_price!=0){
+	if(close_price!=DBL_MAX){
 		nLine=(order_page_top_price-close_price)/min_movement+1+0.5;
 		if(nLine==order_curr_line)
 			mvchgat(order_curr_line+1,22,10,A_UNDERLINE,0,NULL);
@@ -2768,7 +2773,7 @@ void order_move_complete()
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 
 	CTradeRsp* pTradeRsp;
@@ -2844,7 +2849,7 @@ void order_buy_at_market(unsigned int n)
 	double high_limit=vquotes[order_symbol_index].high_limit;
 	double low_limit=vquotes[order_symbol_index].low_limit;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	order_buy_at_limit_price(high_limit,n);
 	order_redraw();
@@ -2857,7 +2862,7 @@ void order_sell_at_market(unsigned int n)
 	double high_limit=vquotes[order_symbol_index].high_limit;
 	double low_limit=vquotes[order_symbol_index].low_limit;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	order_sell_at_limit_price(low_limit,n);
 	order_redraw();
@@ -2884,7 +2889,7 @@ void order_buy_at_limit_price(double price,unsigned int n)
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	// 自动开平（可能分成三笔：开仓、平今、平仓）
 	unsigned int nOpen=0;
@@ -2941,7 +2946,7 @@ void order_revert_at_market()
 	double high_limit=vquotes[order_symbol_index].high_limit;
 	double low_limit=vquotes[order_symbol_index].low_limit;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	int nPosi=0,nBuyPosi=0,nSellPosi=0;
 
@@ -2979,7 +2984,7 @@ void order_sell_at_limit_price(double price,unsigned int n)
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 
 	// 自动开平（可能分成三笔：开仓、平今、平仓）
@@ -3141,7 +3146,7 @@ void order_cancel_orders_at_price(double price)
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 
 	std::vector<CThostFtdcOrderField>::iterator iter;
@@ -3190,7 +3195,7 @@ void order_cancel_all_orders()
 	double high_limit=vquotes[order_symbol_index].high_limit;
 	double low_limit=vquotes[order_symbol_index].low_limit;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 
 	std::vector<CThostFtdcOrderField>::iterator iter;
@@ -3284,14 +3289,14 @@ void order_move_forward_1_line()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
 	}
-	if(order_curr_price==DBL_MAX || order_curr_price==0){
+	if(order_curr_price==DBL_MAX){
 		order_curr_price=high_limit;
 	}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
 		order_curr_price=high_limit;
@@ -3315,14 +3320,14 @@ void order_move_backward_1_line()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
 	}
-	if(order_curr_price==DBL_MAX || order_curr_price==0){
+	if(order_curr_price==DBL_MAX){
 		order_curr_price=high_limit;
 	}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
 		order_curr_price=high_limit;
