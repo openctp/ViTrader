@@ -183,7 +183,15 @@ column_item_t column_items[]={
 #define COL_HIGH_LIMIT		20		// 涨停价
 	{"涨停",		10},
 #define COL_LOW_LIMIT		21		// 跌停价
-	{"跌停",		10}
+	{"跌停",		10},
+#define COL_DATE			22		// 日期
+	{"日期",		10},
+#define COL_TIME			23		// 时间
+	{"时间",		10},
+#define COL_TRADE_DAY		24		// 交易日
+	{"交易日",		10},
+#define COL_EXCHANGE		25		// 交易所
+	{"交易所",		10}
 };
 std::vector<int> vcolumns;	// columns in order
 std::map<int,bool> mcolumns;	// column select status
@@ -495,6 +503,10 @@ int main(int argc,char *argv[])
 	mcolumns[COL_OPENINT]=true;vcolumns.push_back(COL_OPENINT);
 	mcolumns[COL_PREV_OPENINT]=true;vcolumns.push_back(COL_PREV_OPENINT);
 	mcolumns[COL_SETTLEMENT]=true;vcolumns.push_back(COL_SETTLEMENT);
+	mcolumns[COL_DATE] = true; vcolumns.push_back(COL_DATE);
+	mcolumns[COL_TIME] = true; vcolumns.push_back(COL_TIME);
+	mcolumns[COL_EXCHANGE] = true; vcolumns.push_back(COL_EXCHANGE);
+	mcolumns[COL_TRADE_DAY] = true; vcolumns.push_back(COL_TRADE_DAY);
 
 	// Init Order List Columns
 	morderlist_columns[ORDERLIST_COL_ACC_ID]=true;vorderlist_columns.push_back(ORDERLIST_COL_ACC_ID);
@@ -1494,7 +1506,7 @@ void display_quotation(const char *product_id)
 			x+=column_items[COL_SYMBOL].width;
 			break;
 		case COL_SYMBOL_NAME:		//product_name
-			mvprintw(y,x,"%-*s",column_items[COL_SYMBOL].width,vquotes[i].product_name);
+			mvprintw(y,x,"%-*s",column_items[COL_SYMBOL_NAME].width,vquotes[i].product_name);
 			x+=column_items[COL_SYMBOL_NAME].width+1;
 			break;
 		case COL_CLOSE:		//close
@@ -1623,6 +1635,22 @@ void display_quotation(const char *product_id)
 			mvprintw(y,x,"%*d",column_items[COL_PREV_OPENINT].width,vquotes[i].prev_openint);
 			x+=column_items[COL_PREV_OPENINT].width+1;
 			break;
+		case COL_DATE:		//Date
+			mvprintw(y, x, "%-*s", column_items[COL_DATE].width, vquotes[i].update_date);
+			x += column_items[COL_DATE].width + 1;
+			break;
+		case COL_TIME:		//Time
+			mvprintw(y, x, "%-*s", column_items[COL_TIME].width, vquotes[i].update_time);
+			x += column_items[COL_TIME].width + 1;
+			break;
+		case COL_TRADE_DAY:		//Date
+			mvprintw(y, x, "%-*s", column_items[COL_TRADE_DAY].width, vquotes[i].trading_day);
+			x += column_items[COL_TRADE_DAY].width + 1;
+			break;
+		case COL_EXCHANGE:		//Exchange
+			mvprintw(y, x, "%-*s", column_items[COL_EXCHANGE].width, vquotes[i].exchange_id);
+			x += column_items[COL_EXCHANGE].width + 1;
+			break;
 		default:
 			break;
 		}
@@ -1685,9 +1713,9 @@ void display_status()
 
 	if(working_window!=WIN_MAINBOARD)
 		return;
+	getmaxyx(stdscr,y,x);
 	struct tm *t;
 	time_t tt;
-	getmaxyx(stdscr,y,x);
 	tt=time(NULL);
 	t=localtime(&tt);
 	sprintf(tradetime,"%02d:%02d:%02d",t->tm_hour,t->tm_min,t->tm_sec);
@@ -5553,6 +5581,22 @@ void display_title()
 			mvprintw(y,x,"%*s",column_items[COL_PREV_OPENINT].width,column_items[COL_PREV_OPENINT].name);
 			x+=column_items[COL_PREV_OPENINT].width+1;
 			break;
+		case COL_DATE:		//Date
+			mvprintw(y, x, "%-*s", column_items[COL_DATE].width, column_items[COL_DATE].name);
+			x += column_items[COL_DATE].width + 1;
+			break;
+		case COL_TIME:		//Time
+			mvprintw(y, x, "%-*s", column_items[COL_TIME].width, column_items[COL_TIME].name);
+			x += column_items[COL_TIME].width + 1;
+			break;
+		case COL_TRADE_DAY:		//Date
+			mvprintw(y, x, "%-*s", column_items[COL_TRADE_DAY].width, column_items[COL_TRADE_DAY].name);
+			x += column_items[COL_TRADE_DAY].width + 1;
+			break;
+		case COL_EXCHANGE:		//Exchange
+			mvprintw(y, x, "%-*s", column_items[COL_EXCHANGE].width, column_items[COL_EXCHANGE].name);
+			x += column_items[COL_EXCHANGE].width + 1;
+			break;
 		default:
 			break;
 		}
@@ -9261,6 +9305,9 @@ void CQuoteRsp::HandleRtnDepthMarketData(CThostFtdcDepthMarketDataField& DepthMa
 			vquotes[i].prev_openint=DepthMarketData.PreOpenInterest;
 			if(strcmp(vquotes[i].exchange_id,"CZCE")!=0)
 				vquotes[i].average_price/=vquotes[i].multiple;
+			strcpy(vquotes[i].update_date, DepthMarketData.ActionDay);
+			strcpy(vquotes[i].update_time, DepthMarketData.UpdateTime);
+			strcpy(vquotes[i].trading_day, DepthMarketData.TradingDay);
 			break;
 		}
 	}
