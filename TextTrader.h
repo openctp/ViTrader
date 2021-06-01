@@ -155,8 +155,6 @@ public:
 	char user[30];
 	char passwd[30];
 	char broker[30];
-	char tradedate[20];
-	char tradetime[20];
 	char tradeserv[256];
 	char quoteserv[256];
 	char license[20];
@@ -189,7 +187,10 @@ typedef struct {
 	double low_limit;
 	int precision;
 	bool subscribed;
-	char expired_date[20];
+	char expired_date[11];
+	char update_date[11];
+	char update_time[11];
+	char trading_day[11];
 	int product_type;
 	char product[20];
 	double margin_ratio;
