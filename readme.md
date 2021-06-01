@@ -5,6 +5,20 @@
 
 ![1616771807(1)](https://user-images.githubusercontent.com/83346523/120349092-611bf200-c330-11eb-8bd1-326adc7f7900.png)
 
+### 简介
+TextTrader是一款命令行交易客户端，操作命令基本同VI编辑器，集交易与行情于一体，支持支持Windows、Linux、MacOS、FreeBSD等操作系统。
+TextTrader支持CTP期货交易柜台，也支持采用CTP兼容接口的其它平台（[ctpstock-CTP兼容接口](https://github.com/krenx1983/ctpstock)）。
+采用自动开平模式，不需要手动指定开平。
+采用同图形界面的“One Click Order”点价下单模式，支持改单。
+
+### 编译
+Windows：可用vs2019打开工程文件编译，也可在命令行使用nmake编译。
+Linux/FreeBSD：使用gmake -f makefile.linux编译
+MacOS:使用make -f makefile.mac编译
+
+### 安装包
+本项目Releases目录下有各平台已编译好的程序，可直接下载使用，均为绿色版，不需要安装。
+如需连接[CTP接口兼容模拟交易平台](https://github.com/krenx1983/tradenow)，请参照平台中相关说明。
 
 ### 移动命令（所有窗口通用）： 
 
