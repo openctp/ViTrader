@@ -3,6 +3,9 @@
 ​       版本1.0
    krenx@qq.com
 
+![1616771807(1)](https://user-images.githubusercontent.com/83346523/120349092-611bf200-c330-11eb-8bd1-326adc7f7900.png)
+
+
 ### 移动命令（所有窗口通用）： 
 
 ​	上下左右：j、k、h、l及四个方向键
