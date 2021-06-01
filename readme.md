@@ -57,3 +57,4 @@
 ​	一次向下移动多行：数值+j，如先按3，再按j，表示向下移动3行。
 ​	一次下单N手：数值+i，如先按5，再按i，表示报入5手。
 ​	大多数命令都可以这么用：数值+操作
+![qrcode_for_gh_564e4bf4668c_258](https://user-images.githubusercontent.com/83346523/120348695-fbc80100-c32f-11eb-954f-6973d5f0ee11.jpg)
