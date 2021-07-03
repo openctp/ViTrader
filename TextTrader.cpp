@@ -8238,18 +8238,19 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 	if(vquotes.size()==0 || !bIsLast)
 		return;
 	status_print("查询合约成功.");
-// 	char **ppInstrumentID;
-// 	int i;
-// 	ppInstrumentID=(char**)malloc(vquotes.size()*sizeof(char*));
-// 	for(i=0;i<vquotes.size();i++){
-// 		ppInstrumentID[i]=vquotes[i].product_id;
-// 	}
-// 	pQuoteReq->SubscribeMarketData(ppInstrumentID, vquotes.size());
-	CThostFtdcQryDepthMarketDataField Req;
-	int r=0;
+	//CThostFtdcQryDepthMarketDataField Req;
+	//int r=0;
 
-	memset(&Req,0x00,sizeof(Req));
-	while((r=pTradeReq->ReqQryDepthMarketData(&Req,nTradeRequestID++))==-2 || r==-3)
+	//memset(&Req,0x00,sizeof(Req));
+	//while((r=pTradeReq->ReqQryDepthMarketData(&Req,nTradeRequestID++))==-2 || r==-3)
+	//	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	CThostFtdcQryInvestorPositionField Req;
+	int r = 0;
+
+	memset(&Req, 0x00, sizeof(Req));
+	strcpy(Req.BrokerID, broker);
+	strcpy(Req.InvestorID, user);
+	while ((r = pTradeReq->ReqQryInvestorPosition(&Req, nTradeRequestID++)) == -2 || r == -3)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
