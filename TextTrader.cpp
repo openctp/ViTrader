@@ -9094,7 +9094,7 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 void CTradeRsp::HandleErrRtnOrderInsert(CThostFtdcInputOrderField& InputOrder, CThostFtdcRspInfoField& RspInfo)
 {
 	if(RspInfo.ErrorID!=0){
-		status_print("±¨µ¥¾Ü¾ø:%s",RspInfo.ErrorID,RspInfo.ErrorMsg);
+		status_print("±¨µ¥¾Ü¾ø:%s",RspInfo.ErrorMsg);
 		std::vector<CThostFtdcOrderField>::iterator iter;
 		for(iter=vOrders.begin();iter!=vOrders.end();iter++){
 			if(iter->FrontID==TradeFrontID && iter->SessionID==TradeSessionID && strcmp(iter->OrderRef,InputOrder.OrderRef)==0){
@@ -9146,7 +9146,7 @@ void CTradeRsp::HandleErrRtnOrderInsert(CThostFtdcInputOrderField& InputOrder, C
 void CTradeRsp::HandleErrRtnOrderAction(CThostFtdcOrderActionField& OrderAction, CThostFtdcRspInfoField& RspInfo)
 {
 	if(strlen(OrderAction.InstrumentID)>0){
-		status_print("³·µ¥¾Ü¾ø:[%s]",OrderAction.StatusMsg);
+		status_print("³·µ¥¾Ü¾ø:%s",OrderAction.StatusMsg);
 		std::vector<CThostFtdcInputOrderActionField>::iterator iter;
 		for(iter=vCancelingOrders.begin();iter!=vCancelingOrders.end();iter++){
 			if(strcmp(iter->InstrumentID,OrderAction.InstrumentID)==0 && iter->FrontID==OrderAction.FrontID && iter->SessionID==OrderAction.SessionID && strcmp(iter->OrderRef,OrderAction.OrderRef)==0){
