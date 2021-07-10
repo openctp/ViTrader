@@ -179,7 +179,19 @@ column_item_t column_items[]={
 #define COL_PREV_OPENINT	18		// 昨仓
 	{"昨仓",		10},
 #define COL_AVERAGE_PRICE	19		// 均价
-	{"均价",		10}
+	{"均价",		10},
+#define COL_HIGH_LIMIT		20		// 涨停价
+	{"涨停",		10},
+#define COL_LOW_LIMIT		21		// 跌停价
+	{"跌停",		10},
+#define COL_DATE			22		// 日期
+	{"日期",		10},
+#define COL_TIME			23		// 时间
+	{"时间",		10},
+#define COL_TRADE_DAY		24		// 交易日
+	{"交易日",		10},
+#define COL_EXCHANGE		25		// 交易所
+	{"交易所",		10}
 };
 std::vector<int> vcolumns;	// columns in order
 std::map<int,bool> mcolumns;	// column select status
@@ -328,11 +340,11 @@ int curr_pos=0,curr_col_pos=2;
 int order_curr_line=0,order_curr_col=0,order_max_lines,order_max_cols=9;
 int order_curr_pos=0,order_curr_pos_ask=-1,order_curr_pos_bid=-1;
 int order_symbol_index=-1;
-double order_page_top_price=0,order_curr_price=0;
+double order_page_top_price=DBL_MAX,order_curr_price= DBL_MAX;
 char order_curr_product_id[30];
 char order_curr_accname[100];
 char order_last_symbol[30];
-double order_moving_at_price=0;
+double order_moving_at_price= DBL_MAX;
 int order_is_moving=0;
 
 // Column Settings Curses
@@ -479,6 +491,8 @@ int main(int argc,char *argv[])
 	mcolumns[COL_BID_VOLUME]=true;vcolumns.push_back(COL_BID_VOLUME);
 	mcolumns[COL_ASK_PRICE]=true;vcolumns.push_back(COL_ASK_PRICE);
 	mcolumns[COL_ASK_VOLUME]=true;vcolumns.push_back(COL_ASK_VOLUME);
+	mcolumns[COL_HIGH_LIMIT] = true; vcolumns.push_back(COL_HIGH_LIMIT);
+	mcolumns[COL_LOW_LIMIT] = true; vcolumns.push_back(COL_LOW_LIMIT);
 	mcolumns[COL_PREV_SETTLEMENT]=true;vcolumns.push_back(COL_PREV_SETTLEMENT);
 	mcolumns[COL_ADVANCE]=true;vcolumns.push_back(COL_ADVANCE);
 	mcolumns[COL_OPEN]=true;vcolumns.push_back(COL_OPEN);
@@ -489,6 +503,10 @@ int main(int argc,char *argv[])
 	mcolumns[COL_OPENINT]=true;vcolumns.push_back(COL_OPENINT);
 	mcolumns[COL_PREV_OPENINT]=true;vcolumns.push_back(COL_PREV_OPENINT);
 	mcolumns[COL_SETTLEMENT]=true;vcolumns.push_back(COL_SETTLEMENT);
+	mcolumns[COL_DATE] = true; vcolumns.push_back(COL_DATE);
+	mcolumns[COL_TIME] = true; vcolumns.push_back(COL_TIME);
+	mcolumns[COL_EXCHANGE] = true; vcolumns.push_back(COL_EXCHANGE);
+	mcolumns[COL_TRADE_DAY] = true; vcolumns.push_back(COL_TRADE_DAY);
 
 	// Init Order List Columns
 	morderlist_columns[ORDERLIST_COL_ACC_ID]=true;vorderlist_columns.push_back(ORDERLIST_COL_ACC_ID);
@@ -1488,7 +1506,7 @@ void display_quotation(const char *product_id)
 			x+=column_items[COL_SYMBOL].width;
 			break;
 		case COL_SYMBOL_NAME:		//product_name
-			mvprintw(y,x,"%-*s",column_items[COL_SYMBOL].width,vquotes[i].product_name);
+			mvprintw(y,x,"%-*s",column_items[COL_SYMBOL_NAME].width,vquotes[i].product_name);
 			x+=column_items[COL_SYMBOL_NAME].width+1;
 			break;
 		case COL_CLOSE:		//close
@@ -1541,6 +1559,20 @@ void display_quotation(const char *product_id)
 		case COL_ASK_VOLUME:		//volume
 			mvprintw(y,x,"%*d",column_items[COL_ASK_VOLUME].width,vquotes[i].sell_quantity);
 			x+=column_items[COL_ASK_VOLUME].width+1;
+			break;
+		case COL_HIGH_LIMIT:		//high limit
+			if (vquotes[i].high_limit == DBL_MAX)
+				mvprintw(y, x, "%*c", column_items[COL_HIGH_LIMIT].width, '-');
+			else
+				mvprintw(y, x, "%*.*f", column_items[COL_HIGH_LIMIT].width, vquotes[i].precision, vquotes[i].high_limit);
+			x += column_items[COL_HIGH_LIMIT].width + 1;
+			break;
+		case COL_LOW_LIMIT:		//low limit
+			if (vquotes[i].low_limit == DBL_MAX)
+				mvprintw(y, x, "%*c", column_items[COL_LOW_LIMIT].width, '-');
+			else
+				mvprintw(y, x, "%*.*f", column_items[COL_LOW_LIMIT].width, vquotes[i].precision, vquotes[i].low_limit);
+			x += column_items[COL_LOW_LIMIT].width + 1;
 			break;
 		case COL_OPEN:		//close
 			if(vquotes[i].open_price==DBL_MAX)
@@ -1602,6 +1634,22 @@ void display_quotation(const char *product_id)
 		case COL_PREV_OPENINT:		//volume
 			mvprintw(y,x,"%*d",column_items[COL_PREV_OPENINT].width,vquotes[i].prev_openint);
 			x+=column_items[COL_PREV_OPENINT].width+1;
+			break;
+		case COL_DATE:		//Date
+			mvprintw(y, x, "%-*s", column_items[COL_DATE].width, vquotes[i].update_date);
+			x += column_items[COL_DATE].width + 1;
+			break;
+		case COL_TIME:		//Time
+			mvprintw(y, x, "%-*s", column_items[COL_TIME].width, vquotes[i].update_time);
+			x += column_items[COL_TIME].width + 1;
+			break;
+		case COL_TRADE_DAY:		//Date
+			mvprintw(y, x, "%-*s", column_items[COL_TRADE_DAY].width, vquotes[i].trading_day);
+			x += column_items[COL_TRADE_DAY].width + 1;
+			break;
+		case COL_EXCHANGE:		//Exchange
+			mvprintw(y, x, "%-*s", column_items[COL_EXCHANGE].width, vquotes[i].exchange_id);
+			x += column_items[COL_EXCHANGE].width + 1;
 			break;
 		default:
 			break;
@@ -1665,9 +1713,9 @@ void display_status()
 
 	if(working_window!=WIN_MAINBOARD)
 		return;
+	getmaxyx(stdscr,y,x);
 	struct tm *t;
 	time_t tt;
-	getmaxyx(stdscr,y,x);
 	tt=time(NULL);
 	t=localtime(&tt);
 	sprintf(tradetime,"%02d:%02d:%02d",t->tm_hour,t->tm_min,t->tm_sec);
@@ -2063,7 +2111,7 @@ void order_goto_file_top()
 	double low_limit=vquotes[order_symbol_index].low_limit;
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	order_page_top_price=high_limit;
 	order_curr_price=high_limit;
@@ -2080,10 +2128,10 @@ void order_goto_file_bottom()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	order_curr_price=low_limit;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2104,9 +2152,9 @@ void order_goto_page_top()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2124,9 +2172,9 @@ void order_goto_page_bottom()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2146,9 +2194,9 @@ void order_goto_page_middle()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2170,9 +2218,9 @@ void order_scroll_forward_1_line()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2180,7 +2228,7 @@ void order_scroll_forward_1_line()
 		if(order_page_top_price>=low_limit+error_amount)
 			order_page_top_price-=min_movement;
 	}
-	if(order_curr_price==DBL_MAX || order_curr_price==0){
+	if(order_curr_price==DBL_MAX){
 		order_curr_price=high_limit;
 	}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
 		order_curr_price=high_limit;
@@ -2201,9 +2249,9 @@ void order_scroll_backward_1_line()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2212,7 +2260,7 @@ void order_scroll_backward_1_line()
 	}else{
 		order_page_top_price+=min_movement;
 	}
-	if(order_curr_price==DBL_MAX || order_curr_price==0){
+	if(order_curr_price==DBL_MAX){
 		order_curr_price=high_limit;
 	}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
 		order_curr_price=high_limit;
@@ -2261,18 +2309,23 @@ void order_centralize_current_price()
 	double low_limit=vquotes[order_symbol_index].low_limit;
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double close_price=vquotes[order_symbol_index].price;
+	double prev_close = vquotes[order_symbol_index].prev_close;
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0 || prev_settle==DBL_MAX || prev_settle==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(close_price==DBL_MAX || close_price==0){
+	order_curr_price = close_price;
+
+	if(order_curr_price == DBL_MAX){
 		// centralize to prev_settle
-		order_curr_price=prev_settle;
-	}else{
-		// centralize to close_price
-		order_curr_price=close_price;
+		order_curr_price= prev_close;
 	}
+	if (order_curr_price == DBL_MAX) {
+		// centralize to prev_settle
+		order_curr_price = prev_settle;
+	}
+
 	if((order_page_top_price=order_curr_price+order_max_lines/2*min_movement)>=high_limit+error_amount)
 		order_page_top_price=high_limit;
 	order_redraw();
@@ -2432,9 +2485,9 @@ void order_display_prices()
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2462,7 +2515,7 @@ void order_display_orders()
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 
 	int i;
@@ -2483,7 +2536,7 @@ void order_display_orders_at_price(double price)
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	if(price>=high_limit+error_amount || price<=low_limit-error_amount)	//不显示范围外的报单
 		return;
@@ -2596,9 +2649,9 @@ void order_display_bid_ask()
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	int nLine;
 		
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
@@ -2693,14 +2746,14 @@ void order_display_focus()
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	int nLine;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
 	}
-	if(order_curr_price==DBL_MAX || order_curr_price==0){
+	if(order_curr_price==DBL_MAX){
 		order_curr_price=high_limit;
 	}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
 		order_curr_price=high_limit;
@@ -2712,7 +2765,7 @@ void order_display_focus()
 		mvchgat(order_curr_line+1,44,10,A_REVERSE,0,NULL);
 	}
 	//mvchgat(order_curr_line+1,0,-1,A_REVERSE,0,NULL);
-	if(close_price!=DBL_MAX && close_price!=0){
+	if(close_price!=DBL_MAX){
 		nLine=(order_page_top_price-close_price)/min_movement+1+0.5;
 		if(nLine==order_curr_line)
 			mvchgat(order_curr_line+1,22,10,A_UNDERLINE,0,NULL);
@@ -2748,7 +2801,7 @@ void order_move_complete()
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 
 	CTradeRsp* pTradeRsp;
@@ -2824,7 +2877,7 @@ void order_buy_at_market(unsigned int n)
 	double high_limit=vquotes[order_symbol_index].high_limit;
 	double low_limit=vquotes[order_symbol_index].low_limit;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	order_buy_at_limit_price(high_limit,n);
 	order_redraw();
@@ -2837,7 +2890,7 @@ void order_sell_at_market(unsigned int n)
 	double high_limit=vquotes[order_symbol_index].high_limit;
 	double low_limit=vquotes[order_symbol_index].low_limit;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	order_sell_at_limit_price(low_limit,n);
 	order_redraw();
@@ -2864,7 +2917,7 @@ void order_buy_at_limit_price(double price,unsigned int n)
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	// 自动开平（可能分成三笔：开仓、平今、平仓）
 	unsigned int nOpen=0;
@@ -2921,7 +2974,7 @@ void order_revert_at_market()
 	double high_limit=vquotes[order_symbol_index].high_limit;
 	double low_limit=vquotes[order_symbol_index].low_limit;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 	int nPosi=0,nBuyPosi=0,nSellPosi=0;
 
@@ -2959,7 +3012,7 @@ void order_sell_at_limit_price(double price,unsigned int n)
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 
 	// 自动开平（可能分成三笔：开仓、平今、平仓）
@@ -3121,7 +3174,7 @@ void order_cancel_orders_at_price(double price)
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 
 	std::vector<CThostFtdcOrderField>::iterator iter;
@@ -3170,7 +3223,7 @@ void order_cancel_all_orders()
 	double high_limit=vquotes[order_symbol_index].high_limit;
 	double low_limit=vquotes[order_symbol_index].low_limit;
 
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
 
 	std::vector<CThostFtdcOrderField>::iterator iter;
@@ -3264,14 +3317,14 @@ void order_move_forward_1_line()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
 	}
-	if(order_curr_price==DBL_MAX || order_curr_price==0){
+	if(order_curr_price==DBL_MAX){
 		order_curr_price=high_limit;
 	}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
 		order_curr_price=high_limit;
@@ -3295,14 +3348,14 @@ void order_move_backward_1_line()
 	double min_movement=vquotes[order_symbol_index].min_movement;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
-	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0)
+	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
-	if(order_page_top_price==DBL_MAX || order_page_top_price==0){
+	if(order_page_top_price==DBL_MAX){
 		order_page_top_price=high_limit;
 	}else if(order_page_top_price>=high_limit+error_amount || order_page_top_price<=low_limit-error_amount){
 		order_page_top_price=high_limit;
 	}
-	if(order_curr_price==DBL_MAX || order_curr_price==0){
+	if(order_curr_price==DBL_MAX){
 		order_curr_price=high_limit;
 	}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
 		order_curr_price=high_limit;
@@ -5480,6 +5533,14 @@ void display_title()
 			mvprintw(y,x,"%*s",column_items[COL_ASK_VOLUME].width,column_items[COL_ASK_VOLUME].name);
 			x+=column_items[COL_ASK_VOLUME].width+1;
 			break;
+		case COL_HIGH_LIMIT:		//high limit
+			mvprintw(y, x, "%*s", column_items[COL_HIGH_LIMIT].width, column_items[COL_HIGH_LIMIT].name);
+			x += column_items[COL_HIGH_LIMIT].width + 1;
+			break;
+		case COL_LOW_LIMIT:		//low limit
+			mvprintw(y, x, "%*s", column_items[COL_LOW_LIMIT].width, column_items[COL_LOW_LIMIT].name);
+			x += column_items[COL_LOW_LIMIT].width + 1;
+			break;
 		case COL_OPEN:		//close
 			mvprintw(y,x,"%*s",column_items[COL_OPEN].width,column_items[COL_OPEN].name);
 			x+=column_items[COL_OPEN].width+1;
@@ -5519,6 +5580,22 @@ void display_title()
 		case COL_PREV_OPENINT:		//volume
 			mvprintw(y,x,"%*s",column_items[COL_PREV_OPENINT].width,column_items[COL_PREV_OPENINT].name);
 			x+=column_items[COL_PREV_OPENINT].width+1;
+			break;
+		case COL_DATE:		//Date
+			mvprintw(y, x, "%-*s", column_items[COL_DATE].width, column_items[COL_DATE].name);
+			x += column_items[COL_DATE].width + 1;
+			break;
+		case COL_TIME:		//Time
+			mvprintw(y, x, "%-*s", column_items[COL_TIME].width, column_items[COL_TIME].name);
+			x += column_items[COL_TIME].width + 1;
+			break;
+		case COL_TRADE_DAY:		//Date
+			mvprintw(y, x, "%-*s", column_items[COL_TRADE_DAY].width, column_items[COL_TRADE_DAY].name);
+			x += column_items[COL_TRADE_DAY].width + 1;
+			break;
+		case COL_EXCHANGE:		//Exchange
+			mvprintw(y, x, "%-*s", column_items[COL_EXCHANGE].width, column_items[COL_EXCHANGE].name);
+			x += column_items[COL_EXCHANGE].width + 1;
 			break;
 		default:
 			break;
@@ -8161,18 +8238,19 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 	if(vquotes.size()==0 || !bIsLast)
 		return;
 	status_print("查询合约成功.");
-// 	char **ppInstrumentID;
-// 	int i;
-// 	ppInstrumentID=(char**)malloc(vquotes.size()*sizeof(char*));
-// 	for(i=0;i<vquotes.size();i++){
-// 		ppInstrumentID[i]=vquotes[i].product_id;
-// 	}
-// 	pQuoteReq->SubscribeMarketData(ppInstrumentID, vquotes.size());
-	CThostFtdcQryDepthMarketDataField Req;
-	int r=0;
+	//CThostFtdcQryDepthMarketDataField Req;
+	//int r=0;
 
-	memset(&Req,0x00,sizeof(Req));
-	while((r=pTradeReq->ReqQryDepthMarketData(&Req,nTradeRequestID++))==-2 || r==-3)
+	//memset(&Req,0x00,sizeof(Req));
+	//while((r=pTradeReq->ReqQryDepthMarketData(&Req,nTradeRequestID++))==-2 || r==-3)
+	//	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	CThostFtdcQryInvestorPositionField Req;
+	int r = 0;
+
+	memset(&Req, 0x00, sizeof(Req));
+	strcpy(Req.BrokerID, broker);
+	strcpy(Req.InvestorID, user);
+	while ((r = pTradeReq->ReqQryInvestorPosition(&Req, nTradeRequestID++)) == -2 || r == -3)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
@@ -9016,7 +9094,7 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 void CTradeRsp::HandleErrRtnOrderInsert(CThostFtdcInputOrderField& InputOrder, CThostFtdcRspInfoField& RspInfo)
 {
 	if(RspInfo.ErrorID!=0){
-		status_print("报单拒绝:%s",RspInfo.ErrorID,RspInfo.ErrorMsg);
+		status_print("报单拒绝:%s",RspInfo.ErrorMsg);
 		std::vector<CThostFtdcOrderField>::iterator iter;
 		for(iter=vOrders.begin();iter!=vOrders.end();iter++){
 			if(iter->FrontID==TradeFrontID && iter->SessionID==TradeSessionID && strcmp(iter->OrderRef,InputOrder.OrderRef)==0){
@@ -9068,7 +9146,7 @@ void CTradeRsp::HandleErrRtnOrderInsert(CThostFtdcInputOrderField& InputOrder, C
 void CTradeRsp::HandleErrRtnOrderAction(CThostFtdcOrderActionField& OrderAction, CThostFtdcRspInfoField& RspInfo)
 {
 	if(strlen(OrderAction.InstrumentID)>0){
-		status_print("撤单拒绝:[%s]",OrderAction.StatusMsg);
+		status_print("撤单拒绝:%s",OrderAction.StatusMsg);
 		std::vector<CThostFtdcInputOrderActionField>::iterator iter;
 		for(iter=vCancelingOrders.begin();iter!=vCancelingOrders.end();iter++){
 			if(strcmp(iter->InstrumentID,OrderAction.InstrumentID)==0 && iter->FrontID==OrderAction.FrontID && iter->SessionID==OrderAction.SessionID && strcmp(iter->OrderRef,OrderAction.OrderRef)==0){
@@ -9221,8 +9299,16 @@ void CQuoteRsp::HandleRtnDepthMarketData(CThostFtdcDepthMarketDataField& DepthMa
 			vquotes[i].settle=DepthMarketData.SettlementPrice;
 			vquotes[i].openint=DepthMarketData.OpenInterest;
 			vquotes[i].average_price=DepthMarketData.AveragePrice;
+			vquotes[i].high_limit=DepthMarketData.UpperLimitPrice;
+			vquotes[i].low_limit=DepthMarketData.LowerLimitPrice;
+			vquotes[i].prev_settle=DepthMarketData.PreSettlementPrice;
+			vquotes[i].prev_close=DepthMarketData.PreClosePrice;
+			vquotes[i].prev_openint=DepthMarketData.PreOpenInterest;
 			if(strcmp(vquotes[i].exchange_id,"CZCE")!=0)
 				vquotes[i].average_price/=vquotes[i].multiple;
+			strcpy(vquotes[i].update_date, DepthMarketData.ActionDay);
+			strcpy(vquotes[i].update_time, DepthMarketData.UpdateTime);
+			strcpy(vquotes[i].trading_day, DepthMarketData.TradingDay);
 			break;
 		}
 	}
