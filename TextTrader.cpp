@@ -5479,6 +5479,7 @@ void symbol_refresh_screen()
 			mvprintw(i++, 0, "购沽类型：认购期权");
 		else
 			mvprintw(i++, 0, "购沽类型：认沽期权");
+		mvprintw(i++, 0, "标的合约：%s", iter->underlying);
 	}
 	symbol_display_status();
 }
@@ -8215,9 +8216,9 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 	if(strlen(Instrument.InstrumentID)>0){
 		quotation_t quote;
 		memset(&quote,0x00,sizeof(quote));
-		strcpy(quote.product_id,Instrument.InstrumentID);
-		strcpy(quote.exchange_id,Instrument.ExchangeID);
-		strcpy(quote.product_name,Instrument.InstrumentName);
+		strncpy(quote.product_id,Instrument.InstrumentID, sizeof(quote.product_id) - 1);
+		strncpy(quote.exchange_id,Instrument.ExchangeID, sizeof(quote.exchange_id) - 1);
+		strncpy(quote.product_name,Instrument.InstrumentName, sizeof(quote.product_name) - 1);
 		if(Instrument.PriceTick>=1)
 			quote.precision=0;
 		else if(Instrument.PriceTick>=0.1)
@@ -8238,6 +8239,7 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 		strcpy(quote.product,Instrument.ProductID);
 		quote.product_type=Instrument.ProductClass;
 		quote.option_type=Instrument.OptionsType;
+		strncpy(quote.underlying, Instrument.UnderlyingInstrID,sizeof(quote.underlying)-1);
 		sprintf(quote.expired_date,"%s",Instrument.ExpireDate);
 	
 		vquotes.push_back(quote);

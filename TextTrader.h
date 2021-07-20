@@ -194,6 +194,7 @@ typedef struct {
 	int product_type;
 	int option_type;
 	char product[20];
+	char underlying[30];
 	double margin_ratio;
 	int multiple;
 	double buy_price2;
