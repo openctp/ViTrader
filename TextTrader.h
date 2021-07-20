@@ -192,6 +192,7 @@ typedef struct {
 	char update_time[11];
 	char trading_day[11];
 	int product_type;
+	int option_type;
 	char product[20];
 	double margin_ratio;
 	int multiple;

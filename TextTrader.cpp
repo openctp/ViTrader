@@ -5451,24 +5451,34 @@ void symbol_refresh_screen()
 	mvprintw(i++,0,"最后交易日：%s",iter->expired_date);
 	mvprintw(i++,0,"品种：%s",iter->product);
 	switch(iter->product_type){
-	case '1':
+	case THOST_FTDC_PC_Futures:
 		mvprintw(i++,0,"类别：期货");
 		break;
-	case '2':
+	case THOST_FTDC_PC_Options:
 		mvprintw(i++,0,"类别：期权");
 		break;
-	case '3':
+	case THOST_FTDC_PC_Combination:
 		mvprintw(i++,0,"类别：组合");
 		break;
-	case '4':
+	case THOST_FTDC_PC_Spot:
 		mvprintw(i++,0,"类别：即期");
 		break;
-	case '5':
+	case THOST_FTDC_PC_EFP:
 		mvprintw(i++,0,"类别：期转现");
 		break;
-	default:
-		mvprintw(i++,0,"类别：");
+	case THOST_FTDC_PC_SpotOption:
+		mvprintw(i++, 0, "类别：现货期权");
 		break;
+	default:
+		mvprintw(i++,0,"类别：未知");
+		break;
+	}
+	if (iter->product_type == THOST_FTDC_PC_Options) {
+		// 期权
+		if(iter->option_type == THOST_FTDC_CP_CallOptions)
+			mvprintw(i++, 0, "购沽类型：认购期权");
+		else
+			mvprintw(i++, 0, "购沽类型：认沽期权");
 	}
 	symbol_display_status();
 }
@@ -8227,6 +8237,7 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 		quote.margin_ratio=Instrument.ShortMarginRatio;
 		strcpy(quote.product,Instrument.ProductID);
 		quote.product_type=Instrument.ProductClass;
+		quote.option_type=Instrument.OptionsType;
 		sprintf(quote.expired_date,"%s",Instrument.ExpireDate);
 	
 		vquotes.push_back(quote);
