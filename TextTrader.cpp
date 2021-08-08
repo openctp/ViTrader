@@ -5451,24 +5451,34 @@ void symbol_refresh_screen()
 	mvprintw(i++,0,"最后交易日：%s",iter->expired_date);
 	mvprintw(i++,0,"品种：%s",iter->product);
 	switch(iter->product_type){
-	case '1':
+	case THOST_FTDC_PC_Futures:
 		mvprintw(i++,0,"类别：期货");
 		break;
-	case '2':
+	case THOST_FTDC_PC_Options:
 		mvprintw(i++,0,"类别：期权");
 		break;
-	case '3':
+	case THOST_FTDC_PC_Combination:
 		mvprintw(i++,0,"类别：组合");
 		break;
-	case '4':
+	case THOST_FTDC_PC_Spot:
 		mvprintw(i++,0,"类别：即期");
 		break;
-	case '5':
+	case THOST_FTDC_PC_EFP:
 		mvprintw(i++,0,"类别：期转现");
 		break;
-	default:
-		mvprintw(i++,0,"类别：");
+	case THOST_FTDC_PC_SpotOption:
+		mvprintw(i++, 0, "类别：现货期权");
 		break;
+	default:
+		mvprintw(i++,0,"类别：未知");
+		break;
+	}
+	if (iter->product_type == THOST_FTDC_PC_Options) {
+		// 期权
+		if(iter->option_type == THOST_FTDC_CP_CallOptions)
+			mvprintw(i++, 0, "购沽类型：认购期权");
+		else
+			mvprintw(i++, 0, "购沽类型：认沽期权");
 	}
 	symbol_display_status();
 }
@@ -5724,7 +5734,7 @@ void order_display_title()
 
 	if(nBuyPosi!=0 && nSellPosi!=0){
 		mvprintw(0,0,"%s  %.*f(%.1f%%)  持仓:%d*(%d/%d)  盈亏:%.2f\n",
-			vquotes[order_symbol_index].product_id,	// 合约
+			vquotes[order_symbol_index].product_name,	// 合约
 			precision,
 			offset,	// 涨跌
 			ratio,	// 涨跌幅
@@ -5740,7 +5750,7 @@ void order_display_title()
 			0.0);	// 盈亏
 	}else{
 		mvprintw(0,0,"%s  %.*f(%.1f%%)  持仓:%d  盈亏:%.2f\n",
-			vquotes[order_symbol_index].product_id,	// 合约
+			vquotes[order_symbol_index].product_name,	// 合约
 			precision,
 			offset,	// 涨跌
 			ratio,	// 涨跌幅
@@ -8207,7 +8217,10 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 		memset(&quote,0x00,sizeof(quote));
 		strcpy(quote.product_id,Instrument.InstrumentID);
 		strcpy(quote.exchange_id,Instrument.ExchangeID);
-		strcpy(quote.product_name,Instrument.InstrumentName);
+		if(strlen(Instrument.InstrumentName))
+			strcpy(quote.product_name,Instrument.InstrumentName);
+		else
+			strcpy(quote.product_name, Instrument.InstrumentID);
 		if(Instrument.PriceTick>=1)
 			quote.precision=0;
 		else if(Instrument.PriceTick>=0.1)
@@ -8227,6 +8240,7 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 		quote.margin_ratio=Instrument.ShortMarginRatio;
 		strcpy(quote.product,Instrument.ProductID);
 		quote.product_type=Instrument.ProductClass;
+		quote.option_type=Instrument.OptionsType;
 		sprintf(quote.expired_date,"%s",Instrument.ExpireDate);
 	
 		vquotes.push_back(quote);
@@ -8795,7 +8809,7 @@ void CTradeRsp::HandleRtnOrder(CThostFtdcOrderField& Order)
 		strcpy(order_status, "部分成交");
 	else
 		strcpy(order_status, "未知");
-	status_print( "%s %.2f %s %d手 %s. %s", Order.InstrumentID, Order.LimitPrice, action, Order.VolumeTotalOriginal-Order.VolumeTraded, order_status, Order.StatusMsg);
+	status_print( "%s %.2f %s 剩余%d手 %s. %s", Order.InstrumentID, Order.LimitPrice, action, Order.VolumeTotalOriginal-Order.VolumeTraded, order_status, Order.StatusMsg);
 
 	std::vector<CThostFtdcOrderField>::iterator iter;
 	std::vector<stPosition_t>::iterator iterPosi;
