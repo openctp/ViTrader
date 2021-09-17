@@ -88,8 +88,6 @@ private:
 };
 void post_task(std::function<void()> task);
 
-char tmp_path[256]=".";
-
 int apierrorcount=sizeof(apierrorarray)/sizeof(apierror_t);
 char apierror_none[100]="";
 char tradedate[20];
@@ -443,7 +441,7 @@ int main(int argc,char *argv[])
 	pQuoteRsp=new CQuoteRsp();
 	vQuoteRsps.push_back(pQuoteRsp);
 	strcpy(pQuoteRsp->quoteserv, market_serv_addr.c_str());
-	sprintf(user_quote_flow_path,"%s/market",tmp_path);
+	sprintf(user_quote_flow_path,"market");
 	pQuoteRsp->pQuoteReq=CThostFtdcMdApi::CreateFtdcMdApi(user_quote_flow_path);
 	pQuoteRsp->pQuoteReq->RegisterSpi(pQuoteRsp);
 	pQuoteRsp->pQuoteReq->RegisterFront((char*)market_serv_addr.c_str());
@@ -471,7 +469,7 @@ int main(int argc,char *argv[])
 	strcpy(pTradeRsp->name, trade_login_id);
 	strcpy(pTradeRsp->tradeserv, trade_serv_addr.c_str());
 	strcpy(order_curr_accname,vTradeRsps[0]->name);
-	sprintf(user_trade_flow_path,"%s/%s_%s_trade",tmp_path, trade_login_broker.c_str(), trade_login_id);
+	sprintf(user_trade_flow_path,"%s_%s_trade", trade_login_broker.c_str(), trade_login_id);
 	pTradeRsp->pTradeReq=CThostFtdcTraderApi::CreateFtdcTraderApi(user_trade_flow_path);
 	pTradeRsp->pTradeReq->RegisterSpi(pTradeRsp);
 	pTradeRsp->pTradeReq->RegisterFront((char*)trade_serv_addr.c_str());
