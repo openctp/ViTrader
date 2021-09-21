@@ -9,7 +9,7 @@
 ### 简介
 TextTrader是一款命令行交易客户端，操作命令基本同VI编辑器，集交易与行情于一体，支持支持Windows、Linux、MacOS、FreeBSD等操作系统。
 
-TextTrader支持CTP期货交易柜台，也支持采用CTP兼容接口的其它平台（[ctpstock-CTP兼容接口](https://github.com/krenx1983/ctpstock)）。
+TextTrader支持CTP期货交易柜台，也支持采用CTP兼容接口的其它平台（[CTP开放平台](https://github.com/krenx1983/openctp)）。
 
 采用自动开平模式，不需要手动指定开平。
 
@@ -25,8 +25,21 @@ MacOS:使用make -f makefile.mac编译
 ### 安装包
 本项目Releases目录下有各平台已编译好的程序，可直接下载使用，均为绿色版，不需要安装。
 
-如需连接[CTP接口兼容模拟交易平台](https://github.com/krenx1983/tradenow)，请参照平台中相关说明。
-
+已发布的各版本说明：
+- Releases/Linux  各柜台的Linux版本
+- Releases/Linux/TextTrader  Linux的CTP版本
+- Releases/Linux/TextTraderTTS  [CTP开放平台](https://github.com/krenx1983/openctp)的Linux版本（交易时段与实盘一致的环境）
+- Releases/Linux/TextTraderSTP  [N视界模拟平台](https://n-sight.com.cn)的Linux版本（7x24小时运行的环境）
+- Releases/MacOSX  各柜台的MacOSX版本
+- Releases  各柜台的win32版本
+- Releases/TextTrader.exe  win32的CTP版本
+- Releases/simnow  [simnow模拟平台](https://www.simnow.com.cn/)的版本（交易时段与实盘一致的环境）
+- Releases/simnow7x24  [simnow模拟平台](https://www.simnow.com.cn/)的版本（7x24小时运行的环境）
+- Releases/openctp  [CTP开放平台](https://github.com/krenx1983/openctp)的版本（交易时段与实盘一致的环境）
+- Releases/openctp7x24  [CTP开放平台](https://github.com/krenx1983/openctp)的版本（7x24小时运行的环境）
+- Releases/N视界CTP  华鑫证券[N视界模拟平台](https://n-sight.com.cn)的期货版本（7x24小时运行的环境）
+- Releases/N视界证券  华鑫证券[N视界模拟平台](https://n-sight.com.cn)的证券版本（7x24小时运行的环境）
+- 
 ### 移动命令（所有窗口通用）： 
 
 - ​	上下左右：j、k、h、l及四个方向键
