@@ -8638,17 +8638,17 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 					if(iterOrder->Direction==THOST_FTDC_D_Buy){
 						if(iterOrder->CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
 							if(iterOrder->CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (iterPosi->SellVolume-iterPosi->TodaySellVolume)==0)
-								iterPosi->TodayFrozenSellVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
-							iterPosi->FrozenSellVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
+								iterPosi->TodayFrozenSellVolume+=iterOrder->VolumeTotal;
+							iterPosi->FrozenSellVolume+=iterOrder->VolumeTotal;
 						}
-						iterPosi->BuyingVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
+						iterPosi->BuyingVolume+=iterOrder->VolumeTotal;
 					}else{
 						if(iterOrder->CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
 							if(iterOrder->CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (iterPosi->BuyVolume-iterPosi->TodayBuyVolume)==0)
-								iterPosi->TodayFrozenBuyVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
-							iterPosi->FrozenBuyVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
+								iterPosi->TodayFrozenBuyVolume+=iterOrder->VolumeTotal;
+							iterPosi->FrozenBuyVolume+=iterOrder->VolumeTotal;
 						}
-						iterPosi->SellingVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
+						iterPosi->SellingVolume+=iterOrder->VolumeTotal;
 					}
 					break;
 				default:	// 未成交冻结仓位
@@ -8682,17 +8682,17 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 						if(iterOrder->Direction==THOST_FTDC_D_Buy){
 							if(iterOrder->CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
 								if(iterOrder->CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (Posi.SellVolume-Posi.TodaySellVolume)==0)
-									Posi.TodayFrozenSellVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
-								Posi.FrozenSellVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
+									Posi.TodayFrozenSellVolume+=iterOrder->VolumeTotal;
+								Posi.FrozenSellVolume+=iterOrder->VolumeTotal;
 							}
-							Posi.BuyingVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
+							Posi.BuyingVolume+=iterOrder->VolumeTotal;
 						}else{
 							if(iterOrder->CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
 								if(iterOrder->CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (Posi.BuyVolume-Posi.TodayBuyVolume)==0)
-									Posi.TodayFrozenBuyVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
-								Posi.FrozenBuyVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
+									Posi.TodayFrozenBuyVolume+=iterOrder->VolumeTotal;
+								Posi.FrozenBuyVolume+=iterOrder->VolumeTotal;
 							}
-							Posi.SellingVolume+=iterOrder->VolumeTotal-iterOrder->VolumeTotal;
+							Posi.SellingVolume+=iterOrder->VolumeTotal;
 						}
 						break;
 					default:	// 未成交冻结仓位
@@ -8903,17 +8903,17 @@ void CTradeRsp::HandleRtnOrder(CThostFtdcOrderField& Order)
 						if(Order.Direction==THOST_FTDC_D_Buy){
 							if(Order.CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
 								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (iterPosi->SellVolume-iterPosi->TodaySellVolume)==0)
-									iterPosi->TodayFrozenSellVolume+=Order.VolumeTotal-Order.VolumeTotal;
-								iterPosi->FrozenSellVolume+=Order.VolumeTotal-Order.VolumeTotal;
+									iterPosi->TodayFrozenSellVolume+=Order.VolumeTotal;
+								iterPosi->FrozenSellVolume+=Order.VolumeTotal;
 							}
-							iterPosi->BuyingVolume+=Order.VolumeTotal-Order.VolumeTotal;
+							iterPosi->BuyingVolume+=Order.VolumeTotal;
 						}else{
 							if(Order.CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
 								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (iterPosi->BuyVolume-iterPosi->TodayBuyVolume)==0)
-									iterPosi->TodayFrozenBuyVolume+=Order.VolumeTotal-Order.VolumeTotal;
-								iterPosi->FrozenBuyVolume+=Order.VolumeTotal-Order.VolumeTotal;
+									iterPosi->TodayFrozenBuyVolume+=Order.VolumeTotal;
+								iterPosi->FrozenBuyVolume+=Order.VolumeTotal;
 							}
-							iterPosi->SellingVolume+=Order.VolumeTotal-Order.VolumeTotal;
+							iterPosi->SellingVolume+=Order.VolumeTotal;
 						}
 						break;
 					default:	// 未成交冻结仓位
@@ -8951,17 +8951,17 @@ void CTradeRsp::HandleRtnOrder(CThostFtdcOrderField& Order)
 						if(Order.Direction==THOST_FTDC_D_Buy){
 							if(Order.CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
 								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (Posi.SellVolume-Posi.TodaySellVolume)==0)
-									Posi.TodayFrozenSellVolume+=Order.VolumeTotal-Order.VolumeTotal;
-								Posi.FrozenSellVolume+=Order.VolumeTotal-Order.VolumeTotal;
+									Posi.TodayFrozenSellVolume+=Order.VolumeTotal;
+								Posi.FrozenSellVolume+=Order.VolumeTotal;
 							}
-							Posi.BuyingVolume+=Order.VolumeTotal-Order.VolumeTotal;
+							Posi.BuyingVolume+=Order.VolumeTotal;
 						}else{
 							if(Order.CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
 								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (Posi.BuyVolume-Posi.TodayBuyVolume)==0)
-									Posi.TodayFrozenBuyVolume+=Order.VolumeTotal-Order.VolumeTotal;
-								Posi.FrozenBuyVolume+=Order.VolumeTotal-Order.VolumeTotal;
+									Posi.TodayFrozenBuyVolume+=Order.VolumeTotal;
+								Posi.FrozenBuyVolume+=Order.VolumeTotal;
 							}
-							Posi.SellingVolume+=Order.VolumeTotal-Order.VolumeTotal;
+							Posi.SellingVolume+=Order.VolumeTotal;
 						}
 						break;
 					default:	// 未成交冻结仓位
