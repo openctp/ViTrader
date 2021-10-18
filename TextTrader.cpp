@@ -1491,6 +1491,10 @@ void display_quotation(const char *product_id)
 	move(y,0);
 	clrtoeol();
 
+	double previous_close = vquotes[i].prev_close;
+	if (previous_close == DBL_MAX || fabs(previous_close) < 0.000001)
+		previous_close = vquotes[i].prev_settle;
+
 	for(iter=vcolumns.begin(),pos=0;iter!=vcolumns.end();iter++,pos++){
 		if(mcolumns[*iter]==false)
 			continue;
@@ -1515,21 +1519,17 @@ void display_quotation(const char *product_id)
 			x+=column_items[COL_CLOSE].width+1;
 			break;
 		case COL_PERCENT:		//close
-			if(vquotes[i].prev_settle==DBL_MAX || vquotes[i].prev_settle==0 || vquotes[i].price==DBL_MAX || vquotes[i].price==0)
+			if(previous_close ==DBL_MAX || fabs(previous_close) < 0.000001 || vquotes[i].price==DBL_MAX || fabs(vquotes[i].price) < 0.000001)
 				mvprintw(y,x,"%*c",column_items[COL_PERCENT].width,'-');
-			else if(vquotes[i].price>vquotes[i].prev_settle)
-				mvprintw(y,x,"%*.1f%%",column_items[COL_PERCENT].width-1,(vquotes[i].price-vquotes[i].prev_settle)/vquotes[i].prev_settle*100.0);
 			else
-				mvprintw(y,x,"%*.1f%%",column_items[COL_PERCENT].width-1,(vquotes[i].price-vquotes[i].prev_settle)/vquotes[i].prev_settle*100.0);
+				mvprintw(y,x,"%*.1f%%",column_items[COL_PERCENT].width-1,(vquotes[i].price- previous_close)/ previous_close *100.0);
 			x+=column_items[COL_PERCENT].width+1;
 			break;
 		case COL_ADVANCE:		//close
-			if(vquotes[i].prev_settle==DBL_MAX || vquotes[i].prev_settle==0 || vquotes[i].price==DBL_MAX || vquotes[i].price==0)
+			if(previous_close == DBL_MAX || fabs(previous_close) < 0.000001 || vquotes[i].price == DBL_MAX || fabs(vquotes[i].price) < 0.000001)
 				mvprintw(y,x,"%*c",column_items[COL_ADVANCE].width,'-');
-			else if(vquotes[i].price>vquotes[i].prev_settle)
-				mvprintw(y,x,"%*.*f",column_items[COL_ADVANCE].width-1,vquotes[i].precision,vquotes[i].price-vquotes[i].prev_settle);
 			else
-				mvprintw(y,x,"%*.*f",column_items[COL_ADVANCE].width-1,vquotes[i].precision,vquotes[i].price-vquotes[i].prev_settle);
+				mvprintw(y,x,"%*.*f",column_items[COL_ADVANCE].width-1,vquotes[i].precision,vquotes[i].price- previous_close);
 			x+=column_items[COL_ADVANCE].width+1;
 			break;
 		case COL_VOLUME:		//volume
