@@ -2766,9 +2766,9 @@ void order_display_focus()
 	if(close_price!=DBL_MAX){
 		nLine=(order_page_top_price-close_price)/min_movement+1+0.5;
 		if(nLine==order_curr_line)
-			mvchgat(order_curr_line+1,22,10,A_UNDERLINE,0,NULL);
+			mvchgat(order_curr_line+1,22,10,A_REVERSE,0,NULL);
 		else if(nLine>=1 && nLine<=order_max_lines)
-			mvchgat(nLine+1,22,10,A_UNDERLINE,0,NULL);
+			mvchgat(nLine+1,22,10,A_REVERSE,0,NULL);
 	}
 
 	//for(int i=0;i<order_max_lines;i++){
