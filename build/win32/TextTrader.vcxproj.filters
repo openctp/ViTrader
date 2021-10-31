@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="INIReader">
+      <UniqueIdentifier>{2abbd06a-c4e3-4c50-872c-0e74e41dfa16}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\INIReader\ini.c">
+      <Filter>INIReader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\INIReader\INIReader.cpp">
+      <Filter>INIReader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\TextTrader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\INIReader\ini.h">
+      <Filter>INIReader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\INIReader\INIReader.h">
+      <Filter>INIReader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\TextTrader.h" />
+  </ItemGroup>
+</Project>
