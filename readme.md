@@ -23,7 +23,7 @@ Linux：
 build/linux目录下，执行make
 
 MacOSX:
-build/MacOSX目录下，执行make
+build/MacOSX目录下，执行make，或打开xcode工程编译。
 
 ### 安装包
 本项目Releases目录下有各平台已编译好的程序，可直接下载使用，均为绿色版，不需要安装。
