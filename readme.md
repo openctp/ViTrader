@@ -16,11 +16,14 @@ TextTrader支持CTP期货交易柜台，也支持采用CTP兼容接口的其它�
 采用同图形界面的“One Click Order”点价下单模式，支持改单。
 
 ### 编译
-Windows：可用vs2019打开工程文件编译，也可在命令行使用nmake编译。
+Windows：
+build/win32目录下，进入命令行执行nmake，或打开VS2019工程编译。
 
-Linux/FreeBSD：使用gmake -f makefile.linux编译
+Linux：
+build/linux目录下，执行make
 
-MacOS:使用make -f makefile.mac编译
+MacOSX:
+build/MacOSX目录下，执行make
 
 ### 安装包
 本项目Releases目录下有各平台已编译好的程序，可直接下载使用，均为绿色版，不需要安装。
