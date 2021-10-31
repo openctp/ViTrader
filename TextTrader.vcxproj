@@ -61,7 +61,7 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>.\CTP;.\PDCurses;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\INIReader;.\CTP;.\PDCurses;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Release\TextTrader.pch</PrecompiledHeaderOutputFile>
@@ -97,7 +97,7 @@
       <WarningLevel>Level3</WarningLevel>
       <MinimalRebuild>true</MinimalRebuild>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.\CTP;.\PDCurses;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\INIReader;.\CTP;.\PDCurses;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Debug\TextTrader.pch</PrecompiledHeaderOutputFile>
@@ -127,13 +127,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ini.c" />
-    <ClCompile Include="INIReader.cpp" />
+    <ClCompile Include="INIReader\ini.c" />
+    <ClCompile Include="INIReader\INIReader.cpp" />
     <ClCompile Include="TextTrader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ini.h" />
-    <ClInclude Include="INIReader.h" />
+    <ClInclude Include="INIReader\ini.h" />
+    <ClInclude Include="INIReader\INIReader.h" />
     <ClInclude Include="TextTrader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
