@@ -5467,6 +5467,15 @@ void symbol_refresh_screen()
 	case THOST_FTDC_PC_SpotOption:
 		mvprintw(i++, 0, "类别：现货期权");
 		break;
+	case 'E':
+		mvprintw(i++, 0, "类别：股票");
+		break;
+	case 'B':
+		mvprintw(i++, 0, "类别：债券");
+		break;
+	case 'D':
+		mvprintw(i++, 0, "类别：基金");
+		break;
 	default:
 		mvprintw(i++,0,"类别：未知");
 		break;
