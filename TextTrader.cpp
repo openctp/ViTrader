@@ -3600,7 +3600,7 @@ void orderlist_display_order(int index)
 			x+=orderlist_column_items[ORDERLIST_COL_SYMBOL].width;
 			break;
 		case ORDERLIST_COL_SYMBOL_NAME:		//product_name
-			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_SYMBOL].width,vOrders[i].InstrumentID);
+			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_SYMBOL].width, vquotes[j].product_name);
 			x+=orderlist_column_items[ORDERLIST_COL_SYMBOL_NAME].width+1;
 			break;
 		case ORDERLIST_COL_DIRECTION:		//close
@@ -4115,7 +4115,7 @@ void filllist_display_filledorder(int index)
 			x+=filllist_column_items[FILLLIST_COL_SYMBOL].width;
 			break;
 		case FILLLIST_COL_SYMBOL_NAME:		//product_name
-			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_SYMBOL].width,vFilledOrders[i].InstrumentID);
+			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_SYMBOL].width, vquotes[j].product_name);
 			x+=filllist_column_items[FILLLIST_COL_SYMBOL_NAME].width+1;
 			break;
 		case FILLLIST_COL_DIRECTION:		//close
@@ -4625,7 +4625,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 			x+=positionlist_column_items[POSITIONLIST_COL_SYMBOL].width;
 			break;
 		case POSITIONLIST_COL_SYMBOL_NAME:		//product_name
-			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_SYMBOL].width,vPositions[i].SymbolID);
+			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_SYMBOL].width, vquotes[j].product_name);
 			x+=positionlist_column_items[POSITIONLIST_COL_SYMBOL_NAME].width+1;
 			break;
 		case POSITIONLIST_COL_VOLUME:		//volume
@@ -5466,6 +5466,15 @@ void symbol_refresh_screen()
 		break;
 	case THOST_FTDC_PC_SpotOption:
 		mvprintw(i++, 0, "类别：现货期权");
+		break;
+	case 'E':
+		mvprintw(i++, 0, "类别：股票");
+		break;
+	case 'B':
+		mvprintw(i++, 0, "类别：债券");
+		break;
+	case 'D':
+		mvprintw(i++, 0, "类别：基金");
 		break;
 	default:
 		mvprintw(i++,0,"类别：未知");

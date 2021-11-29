@@ -437,7 +437,7 @@ void positionlist_display_status();
 void positionlist_display_focus();
 void positionlist_redraw();
 void positionlist_reset(const char *user);
-void positionlist_display_position(const char *szExchangeID,const char *szSymbolID);
+void positionlist_display_position(const char* szAccID, const char* szExchangeID, const char* szSymbolID);
 int on_key_pressed_positionlist(int ch);
 int goto_mainboard_window_from_positionlist();
 int goto_order_window_from_positionlist();
