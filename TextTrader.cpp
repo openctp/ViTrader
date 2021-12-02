@@ -8461,7 +8461,7 @@ void CTradeRsp::HandleRspOrderAction(CThostFtdcInputOrderActionField& InputOrder
 		status_print("撤单失败:%s",RspInfo.ErrorMsg);
 		std::vector<CThostFtdcInputOrderActionField>::iterator iter;
 		for(iter=vCancelingOrders.begin();iter!=vCancelingOrders.end();iter++){
-			if(strcmp(iter->InstrumentID,InputOrderAction.InstrumentID)==0 && iter->FrontID==InputOrderAction.FrontID && iter->SessionID==InputOrderAction.SessionID && strcmp(iter->OrderRef,InputOrderAction.OrderRef)==0){
+			if(iter->FrontID==InputOrderAction.FrontID && iter->SessionID==InputOrderAction.SessionID && strcmp(iter->OrderRef,InputOrderAction.OrderRef)==0){
 				vCancelingOrders.erase(iter);	// 移除正在撤消的报单
 				// 如果正在改单，则取消操作
 				std::vector<CThostFtdcOrderField>::iterator i;
@@ -9170,7 +9170,7 @@ void CTradeRsp::HandleErrRtnOrderAction(CThostFtdcOrderActionField& OrderAction,
 		status_print("撤单拒绝:%s",OrderAction.StatusMsg);
 		std::vector<CThostFtdcInputOrderActionField>::iterator iter;
 		for(iter=vCancelingOrders.begin();iter!=vCancelingOrders.end();iter++){
-			if(strcmp(iter->InstrumentID,OrderAction.InstrumentID)==0 && iter->FrontID==OrderAction.FrontID && iter->SessionID==OrderAction.SessionID && strcmp(iter->OrderRef,OrderAction.OrderRef)==0){
+			if(iter->FrontID==OrderAction.FrontID && iter->SessionID==OrderAction.SessionID && strcmp(iter->OrderRef,OrderAction.OrderRef)==0){
 				vCancelingOrders.erase(iter);	// 移除正在撤消的报单
 				break;
 			}
