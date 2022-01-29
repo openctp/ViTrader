@@ -406,8 +406,7 @@ void status_print(const char* fmt, ...)
 
 int main(int argc,char *argv[])
 {
-	std::string market_serv_addr, trade_serv_addr, trade_login_broker, UserProductInfo, AuthCode, AppID;
-	char trade_login_id[30], trade_login_passwd[30];
+	std::string market_serv_addr, trade_serv_addr, broker, UserProductInfo, AuthCode, AppID, user, password;
 
 	INIReader reader("TextTrader.ini");
 
@@ -418,19 +417,23 @@ int main(int argc,char *argv[])
 	}
 	market_serv_addr = reader.Get("market", "address", "");
 	trade_serv_addr = reader.Get("trade", "address", "");
-	trade_login_broker = reader.Get("trade", "broker", "");
+	broker = reader.Get("trade", "broker", "");
 	UserProductInfo = reader.Get("trade", "UserProductInfo", "");
 	AuthCode = reader.Get("trade", "AuthCode", "");
 	AppID = reader.Get("trade", "AppID", "");
+	user = reader.Get("trade", "user", "");
+	password = reader.Get("trade", "password", "");
 
 	int ch;
 	char user_trade_flow_path[256],user_quote_flow_path[256];
 
 	// get user/password from terminal
-	std::cout << "UserID:";
-	std::cin >> trade_login_id;
-	std::cout << "Password:";
-	std::cin >> trade_login_passwd;
+	if (user == "") {
+		std::cout << "UserID:";
+		std::cin >> user;
+		std::cout << "Password:";
+		std::cin >> password;
+	}
 
 	/* net start */
 	//think_netstart();
@@ -442,6 +445,9 @@ int main(int argc,char *argv[])
 	vQuoteRsps.push_back(pQuoteRsp);
 	strcpy(pQuoteRsp->quoteserv, market_serv_addr.c_str());
 	sprintf(user_quote_flow_path,"market");
+	strcpy(pQuoteRsp->broker, broker.c_str());
+	strcpy(pQuoteRsp->user, user.c_str());
+	strcpy(pQuoteRsp->passwd, password.c_str());
 	pQuoteRsp->pQuoteReq=CThostFtdcMdApi::CreateFtdcMdApi(user_quote_flow_path);
 	pQuoteRsp->pQuoteReq->RegisterSpi(pQuoteRsp);
 	pQuoteRsp->pQuoteReq->RegisterFront((char*)market_serv_addr.c_str());
@@ -451,25 +457,25 @@ int main(int argc,char *argv[])
 	// Trade
 	stAccount_t Account;
 	memset(&Account,0x00,sizeof(Account));
-	strcpy(Account.AccName, trade_login_id);
-	strcpy(Account.BrokerID, trade_login_broker.c_str());
-	strcpy(Account.AccID, trade_login_id);
+	strcpy(Account.AccName, user.c_str());
+	strcpy(Account.BrokerID, broker.c_str());
+	strcpy(Account.AccID, user.c_str());
 	vAccounts.push_back(Account);
 
 	CTradeRsp *pTradeRsp;
 		
 	pTradeRsp=new CTradeRsp();
 	vTradeRsps.push_back(pTradeRsp);
-	strcpy(pTradeRsp->broker, trade_login_broker.c_str());
-	strcpy(pTradeRsp->user, trade_login_id);
-	strcpy(pTradeRsp->passwd, trade_login_passwd);
+	strcpy(pTradeRsp->broker, broker.c_str());
+	strcpy(pTradeRsp->user, user.c_str());
+	strcpy(pTradeRsp->passwd, password.c_str());
 	strcpy(pTradeRsp->UserProductInfo,UserProductInfo.c_str());
-	strcpy(pTradeRsp->AuthCode,AuthCode.c_str());
 	strcpy(pTradeRsp->AppID,AppID.c_str());
-	strcpy(pTradeRsp->name, trade_login_id);
+	strcpy(pTradeRsp->AuthCode,AuthCode.c_str());
+	strcpy(pTradeRsp->name, user.c_str());
 	strcpy(pTradeRsp->tradeserv, trade_serv_addr.c_str());
 	strcpy(order_curr_accname,vTradeRsps[0]->name);
-	sprintf(user_trade_flow_path,"%s_%s_trade", trade_login_broker.c_str(), trade_login_id);
+	sprintf(user_trade_flow_path,"%s_%s_trade", broker.c_str(), user.c_str());
 	pTradeRsp->pTradeReq=CThostFtdcTraderApi::CreateFtdcTraderApi(user_trade_flow_path);
 	pTradeRsp->pTradeReq->RegisterSpi(pTradeRsp);
 	pTradeRsp->pTradeReq->RegisterFront((char*)trade_serv_addr.c_str());
@@ -8071,8 +8077,8 @@ void CTradeRsp::HandleFrontConnected()
 		strncpy(AuthenticateReq.BrokerID,broker,sizeof(AuthenticateReq.BrokerID)-1);
 		strncpy(AuthenticateReq.UserID,user,sizeof(AuthenticateReq.UserID)-1);
 		strncpy(AuthenticateReq.UserProductInfo,UserProductInfo,sizeof(AuthenticateReq.UserProductInfo)-1);
-		strncpy(AuthenticateReq.AuthCode,AuthCode,sizeof(AuthenticateReq.AuthCode)-1);
 		strncpy(AuthenticateReq.AppID,AppID,sizeof(AuthenticateReq.AppID)-1);
+		strcpy(AuthenticateReq.AuthCode,AuthCode); // XTP的认证Key超长，需要借用到后一字段（AppID）的空间
 		pTradeReq->ReqAuthenticate(&AuthenticateReq,nTradeRequestID++);
 	}else{
 		CThostFtdcReqUserLoginField Req;
@@ -9212,9 +9218,9 @@ void CQuoteRsp::HandleFrontConnected()
 		vquotes[i].subscribed=false;
 
 	memset(&Req,0x00,sizeof(Req));
-	//strcpy(Req.BrokerID,broker);
-	//strcpy(Req.UserID,user);
-	//strcpy(Req.Password,passwd);
+	strcpy(Req.BrokerID,broker);
+	strcpy(Req.UserID,user);
+	strcpy(Req.Password,passwd);
 	//sprintf(Req.UserProductInfo,"%s %s",APP_ID,APP_VERSION);
 	pQuoteReq->ReqUserLogin(&Req,0);
 }
