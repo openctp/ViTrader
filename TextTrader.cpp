@@ -406,7 +406,7 @@ void status_print(const char* fmt, ...)
 
 int main(int argc,char *argv[])
 {
-	std::string market_serv_addr, trade_serv_addr, broker, UserProductInfo, AuthCode, AppID, user, password, quot_user, quot_password;
+	std::string market_serv_addr, trade_serv_addr, broker, UserProductInfo, AuthCode, AppID, user, password, market_user, market_password;
 
 	INIReader reader("TextTrader.ini");
 
@@ -423,11 +423,11 @@ int main(int argc,char *argv[])
 	AppID = reader.Get("trade", "AppID", "");
 	user = reader.Get("trade", "user", "");
 	password = reader.Get("trade", "password", "");
-	quot_user = reader.Get("quot", "user", "");
-	quot_password = reader.Get("quot", "password", "");
+	market_user = reader.Get("market", "user", "");
+	market_password = reader.Get("market", "password", "");
 
 	int ch;
-	char user_trade_flow_path[256],user_quote_flow_path[256];
+	char user_trade_flow_path[256],user_market_flow_path[256];
 
 	// get user/password from terminal
 	if (user == "") {
@@ -437,11 +437,11 @@ int main(int argc,char *argv[])
 		std::cin >> password;
 	}
 
-	// If no special quot password then use trade's.
-	if (quot_user == "")
-		quot_user = user;
-	if (quot_password == "")
-		quot_password = password;
+	// If no special market password then use trade's.
+	if (market_user == "")
+		market_user = user;
+	if (market_password == "")
+		market_password = password;
 
 	/* net start */
 	//think_netstart();
@@ -452,11 +452,11 @@ int main(int argc,char *argv[])
 	pQuoteRsp=new CQuoteRsp();
 	vQuoteRsps.push_back(pQuoteRsp);
 	strcpy(pQuoteRsp->quoteserv, market_serv_addr.c_str());
-	sprintf(user_quote_flow_path,"market");
+	sprintf(user_market_flow_path,"market");
 	strcpy(pQuoteRsp->broker, broker.c_str());
-	strcpy(pQuoteRsp->user, quot_user.c_str());
-	strcpy(pQuoteRsp->passwd, quot_password.c_str());
-	pQuoteRsp->pQuoteReq=CThostFtdcMdApi::CreateFtdcMdApi(user_quote_flow_path);
+	strcpy(pQuoteRsp->user, market_user.c_str());
+	strcpy(pQuoteRsp->passwd, market_password.c_str());
+	pQuoteRsp->pQuoteReq=CThostFtdcMdApi::CreateFtdcMdApi(user_market_flow_path);
 	pQuoteRsp->pQuoteReq->RegisterSpi(pQuoteRsp);
 	pQuoteRsp->pQuoteReq->RegisterFront((char*)market_serv_addr.c_str());
 	pQuoteRsp->pQuoteReq->Init();
