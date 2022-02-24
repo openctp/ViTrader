@@ -406,7 +406,7 @@ void status_print(const char* fmt, ...)
 
 int main(int argc,char *argv[])
 {
-	std::string market_serv_addr, trade_serv_addr, broker, UserProductInfo, AuthCode, AppID, user, password;
+	std::string market_serv_addr, trade_serv_addr, broker, UserProductInfo, AuthCode, AppID, user, password, quot_user, quot_password;
 
 	INIReader reader("TextTrader.ini");
 
@@ -423,6 +423,8 @@ int main(int argc,char *argv[])
 	AppID = reader.Get("trade", "AppID", "");
 	user = reader.Get("trade", "user", "");
 	password = reader.Get("trade", "password", "");
+	quot_user = reader.Get("quot", "user", "");
+	quot_password = reader.Get("quot", "password", "");
 
 	int ch;
 	char user_trade_flow_path[256],user_quote_flow_path[256];
@@ -435,6 +437,12 @@ int main(int argc,char *argv[])
 		std::cin >> password;
 	}
 
+	// If no special quot password then use trade's.
+	if (quot_user == "")
+		quot_user = user;
+	if (quot_password == "")
+		quot_password = password;
+
 	/* net start */
 	//think_netstart();
 
@@ -446,8 +454,8 @@ int main(int argc,char *argv[])
 	strcpy(pQuoteRsp->quoteserv, market_serv_addr.c_str());
 	sprintf(user_quote_flow_path,"market");
 	strcpy(pQuoteRsp->broker, broker.c_str());
-	strcpy(pQuoteRsp->user, user.c_str());
-	strcpy(pQuoteRsp->passwd, password.c_str());
+	strcpy(pQuoteRsp->user, quot_user.c_str());
+	strcpy(pQuoteRsp->passwd, quot_password.c_str());
 	pQuoteRsp->pQuoteReq=CThostFtdcMdApi::CreateFtdcMdApi(user_quote_flow_path);
 	pQuoteRsp->pQuoteReq->RegisterSpi(pQuoteRsp);
 	pQuoteRsp->pQuoteReq->RegisterFront((char*)market_serv_addr.c_str());
