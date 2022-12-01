@@ -3074,6 +3074,7 @@ int OrderInsert(const char* AccountName,const char* InvestorID,const char* Instr
 			
 	memset(&Req,0x00,sizeof(Req));
 	strncpy(Req.BrokerID,pTradeRsp->broker,sizeof(Req.BrokerID)-1);
+	strncpy(Req.UserID, pTradeRsp->user, sizeof(Req.UserID) - 1);
 	strncpy(Req.InvestorID,pTradeRsp->user,sizeof(Req.InvestorID)-1);
 	strcpy(Req.InstrumentID,InstrumentID);
 	strcpy(Req.ExchangeID, iter_quot->exchange_id);
@@ -3208,6 +3209,7 @@ void order_cancel_orders_at_price(double price)
 
 			memset(&Req,0x00,sizeof(Req));
 			strncpy(Req.BrokerID,iter->BrokerID,sizeof(Req.BrokerID)-1);
+			strncpy(Req.UserID, iter->InvestorID, sizeof(Req.UserID) - 1);
 			strncpy(Req.InvestorID,iter->InvestorID,sizeof(Req.InvestorID)-1);
 			strcpy(Req.ExchangeID,iter->ExchangeID);
 			strcpy(Req.InstrumentID,iter->InstrumentID);
@@ -3253,6 +3255,7 @@ void order_cancel_all_orders()
 
 		memset(&Req,0x00,sizeof(Req));
 		strncpy(Req.BrokerID,iter->BrokerID,sizeof(Req.BrokerID)-1);
+		strncpy(Req.UserID, iter->InvestorID, sizeof(Req.UserID) - 1);
 		strncpy(Req.InvestorID,iter->InvestorID,sizeof(Req.InvestorID)-1);
 		strcpy(Req.ExchangeID,iter->ExchangeID);
 		strcpy(Req.InstrumentID,iter->InstrumentID);
