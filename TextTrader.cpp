@@ -5484,13 +5484,13 @@ void symbol_refresh_screen()
 	case THOST_FTDC_PC_SpotOption:
 		mvprintw(i++, 0, "类别：现货期权");
 		break;
-	case 'E':
+	case OPENCTP_FTDC_PC_EQUITY:
 		mvprintw(i++, 0, "类别：股票");
 		break;
-	case 'B':
+	case OPENCTP_FTDC_PC_BOND:
 		mvprintw(i++, 0, "类别：债券");
 		break;
-	case 'D':
+	case OPENCTP_FTDC_PC_FUND:
 		mvprintw(i++, 0, "类别：基金");
 		break;
 	default:

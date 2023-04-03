@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\INIReader\ini.c" />
+    <ClCompile Include="..\..\INIReader\ini.cpp" />
     <ClCompile Include="..\..\INIReader\INIReader.cpp" />
     <ClCompile Include="..\..\TextTrader.cpp" />
   </ItemGroup>

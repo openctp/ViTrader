@@ -12,6 +12,11 @@
 #include "ThostFtdcMdApi.h"
 #include "ThostFtdcTraderApi.h"
 
+// openctp ext
+#define OPENCTP_FTDC_PC_EQUITY 'E'
+#define OPENCTP_FTDC_PC_BOND 'B'
+#define OPENCTP_FTDC_PC_FUND 'D'
+
 #define CONNECTION_STATUS_DISCONNECTED	0
 #define CONNECTION_STATUS_CONNECTED		1
 #define CONNECTION_STATUS_LOGINOK		2
@@ -191,7 +196,7 @@ typedef struct {
 	char update_date[11];
 	char update_time[11];
 	char trading_day[11];
-	int product_type;
+	TThostFtdcProductClassType product_type;
 	int option_type;
 	char product[20];
 	char underlying[30];
