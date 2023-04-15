@@ -6,13 +6,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\INIReader\ini.c">
-      <Filter>INIReader</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\INIReader\INIReader.cpp">
       <Filter>INIReader</Filter>
     </ClCompile>
     <ClCompile Include="..\..\TextTrader.cpp" />
+    <ClCompile Include="..\..\INIReader\ini.cpp">
+      <Filter>INIReader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\INIReader\ini.h">

@@ -89,7 +89,6 @@ public:
 	void HandleRspUserLogin(CThostFtdcRspUserLoginField& RspUserLogin,CThostFtdcRspInfoField& RspInfo,int nRequestID,bool bIsLast);
 	void HandleRspUserLogout(CThostFtdcUserLogoutField& UserLogout,CThostFtdcRspInfoField& RspInfo,int nRequestID,bool bIsLast);
 	void HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast);
-	void HandleRspQryDepthMarketData(CThostFtdcDepthMarketDataField& DepthMarketData, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast);
 	void HandleRspQryOrder(CThostFtdcOrderField& Order, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast);
 	void HandleRspQryTrade(CThostFtdcTradeField& Trade, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast);
 	void HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& InvestorPosition, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast);
@@ -104,8 +103,8 @@ public:
 	int TradeFrontID;
 	int TradeSessionID;
 	int TradeOrderRef;
-	int nTradeRequestID;
-	CThostFtdcTraderApi *pTradeReq;
+	int m_nTradeRequestID;
+	CThostFtdcTraderApi *m_pTradeReq;
 	char name[100];
 	char user[30];
 	char passwd[30];
@@ -120,11 +119,11 @@ public:
 	std::vector<CThostFtdcOrderField> m_mMovingOrders;
 
 };
-class CQuoteRsp:public CThostFtdcMdSpi
+class CMarketRsp:public CThostFtdcMdSpi
 {
 public:
-	CQuoteRsp();
-	~CQuoteRsp();
+	CMarketRsp();
+	~CMarketRsp();
 
 	//ÒÑÁ¬½Ó
 	void OnFrontConnected();
@@ -154,14 +153,14 @@ public:
 	void HandleRspUserLogout(CThostFtdcUserLogoutField& UserLogout,CThostFtdcRspInfoField& RspInfo,int nRequestID,bool bIsLast);
 	void HandleRtnDepthMarketData(CThostFtdcDepthMarketDataField& DepthMarketData);
 
-	int nQuoteRequestID;
-	CThostFtdcMdApi *pQuoteReq;
+	int m_nMarketRequestID;
+	CThostFtdcMdApi *m_pMarketReq;
 	char name[100];
 	char user[30];
 	char passwd[30];
 	char broker[30];
 	char tradeserv[256];
-	char quoteserv[256];
+	char marketserv[256];
 	char license[20];
 };
 
@@ -181,10 +180,6 @@ typedef struct {
 	int openint;
 	int prev_openint;
 	double average_price;
-	double buy_price;
-	int buy_quantity;
-	double sell_price;
-	int sell_quantity;
 	double open_price;
 	double prev_settle;
 	double min_movement;
@@ -192,39 +187,22 @@ typedef struct {
 	double low_limit;
 	int precision;
 	bool subscribed;
-	char expired_date[11];
-	char update_date[11];
-	char update_time[11];
-	char trading_day[11];
+	
 	TThostFtdcProductClassType product_type;
 	int option_type;
 	char product[20];
 	char underlying[30];
 	double margin_ratio;
 	int multiple;
-	double buy_price2;
-	int buy_quantity2;
-	double sell_price2;
-	int sell_quantity2;
-	double buy_price3;
-	int buy_quantity3;
-	double sell_price3;
-	int sell_quantity3;
-	double buy_price4;
-	int buy_quantity4;
-	double sell_price4;
-	int sell_quantity4;
-	double buy_price5;
-	int buy_quantity5;
-	double sell_price5;
-	int sell_quantity5;
+	CThostFtdcInstrumentField Instrument;
+	CThostFtdcDepthMarketDataField DepthMarketData;
 } quotation_t;
 
 typedef struct {
 	char BrokerID[20];
 	char AccID[30];
 	char ExchangeID[20];
-	char SymbolID[30];
+	char InstrumentID[30];
 	int Volume;
 	double Price;
 	double ProfitLoss;
@@ -264,7 +242,7 @@ typedef struct {
 } stAccount_t;
 
 // Basic
-int subscribe(const char *product_id);
+int subscribe(size_t index);
 int unsubscribe(const char *product_id);
 const char *apistrerror(int e);
 void init_screen();
@@ -278,7 +256,7 @@ void HandleStatusClear();
 void refresh_screen();
 void display_title();
 void display_status();
-void display_quotation(const char *product_id);
+void display_quotation(size_t index);
 int on_key_pressed_mainboard(int ch);
 int input_parse(int *num,int *cmd);
 int goto_order_window_from_mainboard();
@@ -365,8 +343,8 @@ void order_cancel_all_orders();
 void order_cancel_orders_at_price(double price);
 void order_buy_at_limit_price(double price,unsigned int n);
 void order_sell_at_limit_price(double price,unsigned int n);
-char getOrderOffsetFlag(const char* szAccName,const char* szSymbol,char cDirection,unsigned int nQty,unsigned int &nOpen,unsigned int &nClose,unsigned int &nCloseToday);
-int OrderInsert(const char* AccountName,const char* InvestorID,const char* InstrumentID,char BSFlag,char OCFlag,double Price,unsigned int Qty);
+char getOrderOffsetFlag(const char* szInstrument,char cDirection,unsigned int nQty,unsigned int &nOpen,unsigned int &nClose,unsigned int &nCloseToday);
+int OrderInsert(const char* InstrumentID,char BSFlag,char OCFlag,double Price,unsigned int Qty);
 void order_open_last_symbol();
 void order_move_orders();
 void order_move_complete();
@@ -442,7 +420,7 @@ void positionlist_display_status();
 void positionlist_display_focus();
 void positionlist_redraw();
 void positionlist_reset(const char *user);
-void positionlist_display_position(const char* szAccID, const char* szExchangeID, const char* szSymbolID);
+void positionlist_display_position(const char* szAccID, const char* szExchangeID, const char* szInstrumentID);
 int on_key_pressed_positionlist(int ch);
 int goto_mainboard_window_from_positionlist();
 int goto_order_window_from_positionlist();
@@ -510,7 +488,7 @@ int column_settings_move_down_1_line();
 int goto_mainboard_window_from_column_settings();
 
 
-// Symbol
+// Instrument
 void symbol_refresh_screen();
 void symbol_display_title();
 void symbol_display_status();
