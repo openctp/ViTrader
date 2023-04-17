@@ -384,7 +384,6 @@ int order_corner_curr_pos=0,order_corner_curr_col_pos=0;
 char order_corner_input[100],order_strsearching[30],order_strmatch[30];
 #define ORDER_CORNER_MODE_SYMBOL	0
 #define ORDER_CORNER_MODE_ACCOUNT	1
-int order_corner_mode=ORDER_CORNER_MODE_SYMBOL;
 
 void status_print(const char* fmt, ...)
 {
@@ -973,7 +972,7 @@ int scroll_forward_1_line()
 		curr_line--;
 	}
 	
-	unsubscribe(vquotes[curr_pos].product_id);
+	unsubscribe(curr_pos);
 	curr_pos++;
 	if(vquotes.size()-curr_pos>=max_lines){
 		display_quotation(curr_pos+max_lines-1);
@@ -1001,7 +1000,7 @@ int scroll_backward_1_line()
 	
 	if(curr_line==max_lines){
 		mvchgat(curr_line,0,-1,A_REVERSE,0,NULL);
-		unsubscribe(vquotes[curr_pos+max_lines-1].product_id);
+		unsubscribe(curr_pos+max_lines-1);
 	}else{
 		curr_line++;
 	}
@@ -1035,7 +1034,7 @@ int move_forward_1_line()
 		setscrreg(1,max_lines);
 		scroll(stdscr);
 		setscrreg(0,max_lines+1);
-		unsubscribe(vquotes[curr_pos].product_id);
+		unsubscribe(curr_pos);
 		curr_pos++;
 		display_quotation(curr_pos+max_lines-1);	// new line
 		mvchgat(curr_line,0,-1,A_REVERSE,0,NULL);
@@ -1096,7 +1095,7 @@ int move_backward_1_line()
 		setscrreg(1,max_lines);
 		scrl(-1);
 		setscrreg(0,max_lines+1);
-		unsubscribe(vquotes[curr_pos+max_lines-1].product_id);
+		unsubscribe(curr_pos+max_lines-1);
 		curr_pos--;
 		display_quotation(curr_pos);
 		subscribe(curr_pos);
@@ -1556,17 +1555,17 @@ void display_quotation(size_t index)
 			x+=column_items[COL_ASK_VOLUME].width+1;
 			break;
 		case COL_HIGH_LIMIT:		//high limit
-			if (vquotes[i].high_limit == DBL_MAX)
+			if (vquotes[i].DepthMarketData.UpperLimitPrice == DBL_MAX)
 				mvprintw(y, x, "%*c", column_items[COL_HIGH_LIMIT].width, '-');
 			else
-				mvprintw(y, x, "%*.*f", column_items[COL_HIGH_LIMIT].width, vquotes[i].precision, vquotes[i].high_limit);
+				mvprintw(y, x, "%*.*f", column_items[COL_HIGH_LIMIT].width, vquotes[i].precision, vquotes[i].DepthMarketData.UpperLimitPrice);
 			x += column_items[COL_HIGH_LIMIT].width + 1;
 			break;
 		case COL_LOW_LIMIT:		//low limit
-			if (vquotes[i].low_limit == DBL_MAX)
+			if (vquotes[i].DepthMarketData.LowerLimitPrice == DBL_MAX)
 				mvprintw(y, x, "%*c", column_items[COL_LOW_LIMIT].width, '-');
 			else
-				mvprintw(y, x, "%*.*f", column_items[COL_LOW_LIMIT].width, vquotes[i].precision, vquotes[i].low_limit);
+				mvprintw(y, x, "%*.*f", column_items[COL_LOW_LIMIT].width, vquotes[i].precision, vquotes[i].DepthMarketData.LowerLimitPrice);
 			x += column_items[COL_LOW_LIMIT].width + 1;
 			break;
 		case COL_OPEN:		//close
@@ -1813,8 +1812,8 @@ void order_display_status()
 	//	max_ticks=0;
 	//}else{
 	//	int precision=vquotes[order_symbol_index].precision;
-	//	double high_limit=vquotes[order_symbol_index].high_limit;
-	//	double low_limit=vquotes[order_symbol_index].low_limit;
+	//	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	//	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	//	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	//	double buy_price=vquotes[order_symbol_index].DepthMarketData.BidPrice1;
 	//	int buy_quantity=vquotes[order_symbol_index].buy_quantity;
@@ -2102,8 +2101,8 @@ void order_goto_file_top()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	
 	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
@@ -2117,8 +2116,8 @@ void order_goto_file_bottom()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
@@ -2141,8 +2140,8 @@ void order_goto_page_top()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
@@ -2161,8 +2160,8 @@ void order_goto_page_bottom()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
@@ -2183,8 +2182,8 @@ void order_goto_page_middle()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
@@ -2207,8 +2206,8 @@ void order_scroll_forward_1_line()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
@@ -2238,8 +2237,8 @@ void order_scroll_backward_1_line()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
@@ -2299,8 +2298,8 @@ void order_centralize_current_price()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double close_price=vquotes[order_symbol_index].price;
 	double prev_close = vquotes[order_symbol_index].prev_close;
@@ -2330,8 +2329,8 @@ int order_refresh_quote()
 	
 	i=order_symbol_index;
 	int precision=vquotes[i].precision;
-	double high_limit=vquotes[i].high_limit;
-	double low_limit=vquotes[i].low_limit;
+	double high_limit=vquotes[i].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[i].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[i].Instrument.PriceTick;
 	double buy_price=vquotes[i].DepthMarketData.BidPrice1;
 	int buy_quantity=vquotes[i].DepthMarketData.BidVolume1;
@@ -2381,8 +2380,8 @@ int order_goto_price(double price)
 	
 	i=order_symbol_index;
 	int precision=vquotes[i].precision;
-	double high_limit=vquotes[i].high_limit;
-	double low_limit=vquotes[i].low_limit;
+	double high_limit=vquotes[i].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[i].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[i].Instrument.PriceTick;
 	double buy_price = vquotes[i].DepthMarketData.BidPrice1;
 	int buy_quantity = vquotes[i].DepthMarketData.BidVolume1;
@@ -2468,8 +2467,8 @@ void order_display_prices()
 		return;
 
 	int precision=vquotes[order_symbol_index].precision;
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double buy_price = vquotes[order_symbol_index].DepthMarketData.BidPrice1;
 	int buy_quantity = vquotes[order_symbol_index].DepthMarketData.BidVolume1;
@@ -2498,8 +2497,8 @@ void order_display_orders()
 		return;
 	
 	int precision=vquotes[order_symbol_index].precision;
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double buy_price = vquotes[order_symbol_index].DepthMarketData.BidPrice1;
 	int buy_quantity = vquotes[order_symbol_index].DepthMarketData.BidVolume1;
@@ -2525,8 +2524,8 @@ void order_display_orders_at_price(double price)
 		return;
 	
 	int precision=vquotes[order_symbol_index].precision;
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
@@ -2707,8 +2706,8 @@ void order_display_focus()
 		return;
 
 	int precision=vquotes[order_symbol_index].precision;
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double buy_price=vquotes[order_symbol_index].DepthMarketData.BidPrice1;
 	int buy_quantity=vquotes[order_symbol_index].DepthMarketData.BidVolume1;
@@ -2763,8 +2762,8 @@ void order_move_complete()
 		return;
 
 	int precision=vquotes[order_symbol_index].precision;
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double buy_price = vquotes[order_symbol_index].DepthMarketData.BidPrice1;
 	int buy_quantity = vquotes[order_symbol_index].DepthMarketData.BidVolume1;
@@ -2840,8 +2839,8 @@ void order_buy_at_market(unsigned int n)
 	if(order_symbol_index<0)
 		return;
 
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 
 	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
@@ -2853,8 +2852,8 @@ void order_sell_at_market(unsigned int n)
 	if(order_symbol_index<0)
 		return;
 
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 
 	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
@@ -2872,8 +2871,8 @@ void order_buy_at_limit_price(double price,unsigned int n)
 		return;
 
 	int precision=vquotes[order_symbol_index].precision;
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double buy_price = vquotes[order_symbol_index].DepthMarketData.BidPrice1;
 	int buy_quantity = vquotes[order_symbol_index].DepthMarketData.BidVolume1;
@@ -2937,8 +2936,8 @@ void order_revert_at_market()
 	if(order_symbol_index<0)
 		return;
 
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 
 	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
@@ -2967,8 +2966,8 @@ void order_sell_at_limit_price(double price,unsigned int n)
 		return;
 
 	int precision=vquotes[order_symbol_index].precision;
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double buy_price = vquotes[order_symbol_index].DepthMarketData.BidPrice1;
 	int buy_quantity = vquotes[order_symbol_index].DepthMarketData.BidVolume1;
@@ -3129,8 +3128,8 @@ void order_cancel_orders_at_price(double price)
 		return;
 	
 	int precision=vquotes[order_symbol_index].precision;
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 
@@ -3177,8 +3176,8 @@ void order_cancel_all_orders()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 
 	if(high_limit==DBL_MAX || low_limit==DBL_MAX)
 		return;
@@ -3266,8 +3265,8 @@ void order_move_forward_1_line()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
@@ -3297,8 +3296,8 @@ void order_move_backward_1_line()
 	if(order_symbol_index<0)
 		return;
 	
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
 	
@@ -5398,10 +5397,10 @@ void symbol_refresh_screen()
 	mvprintw(i++,0,"交易所名称：%s",iter->exchange_name);
 	mvprintw(i++,0,"合约乘数：%d",iter->Instrument.VolumeMultiple);
 	mvprintw(i++,0,"最小变动价位：%.*f",iter->precision,iter->Instrument.PriceTick);
-	if(iter->margin_ratio==DBL_MAX)
+	if(iter->Instrument.ShortMarginRatio==DBL_MAX)
 		mvprintw(i++,0,"保证金率：");
 	else
-		mvprintw(i++,0,"保证金率：%.1f%%",iter->margin_ratio*100);
+		mvprintw(i++,0,"保证金率：%.1f%%",iter->Instrument.ShortMarginRatio*100);
 	mvprintw(i++,0,"最后交易日：%s",iter->Instrument.ExpireDate);
 	mvprintw(i++,0,"品种：%s",iter->Instrument.ProductID);
 	switch(iter->Instrument.ProductClass){
@@ -5582,8 +5581,8 @@ void order_display_title()
 	if(order_symbol_index<0)
 		return;
 	int precision=vquotes[order_symbol_index].precision;
-	double high_limit=vquotes[order_symbol_index].high_limit;
-	double low_limit=vquotes[order_symbol_index].low_limit;
+	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
+	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
 	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
 	double close_price=vquotes[order_symbol_index].price;
 	double prev_settle=vquotes[order_symbol_index].prev_settle;
@@ -6071,7 +6070,7 @@ int goto_mainboard_window_from_order()
 	working_window=WIN_MAINBOARD;
 	refresh_screen();
 
-	unsubscribe(vquotes[order_symbol_index].product_id);
+	unsubscribe(order_symbol_index);
 	for(i=curr_pos;i<vquotes.size() && i<curr_pos+max_lines;i++){
 		if(vquotes[i].subscribed){
 			ppInstrumentID[0]=vquotes[i].product_id;
@@ -6089,7 +6088,7 @@ int goto_orderlist_window_from_order()
 	working_window=WIN_ORDERLIST;
 	orderlist_refresh_screen();
 	
-	unsubscribe(vquotes[order_symbol_index].product_id);
+	unsubscribe(order_symbol_index);
 	
 	return 0;
 }
@@ -6100,7 +6099,7 @@ int goto_filllist_window_from_order()
 	working_window=WIN_FILLLIST;
 	filllist_refresh_screen();
 	
-	unsubscribe(vquotes[order_symbol_index].product_id);
+	unsubscribe(order_symbol_index);
 	
 	return 0;
 }
@@ -6111,7 +6110,7 @@ int goto_positionlist_window_from_order()
 	working_window=WIN_POSITION;
 	positionlist_refresh_screen();
 	
-	unsubscribe(vquotes[order_symbol_index].product_id);
+	unsubscribe(order_symbol_index);
 	
 	return 0;
 }
@@ -6122,7 +6121,7 @@ int goto_acclist_window_from_order()
 	working_window=WIN_MONEY;
 	acclist_refresh_screen();
 	
-	unsubscribe(vquotes[order_symbol_index].product_id);
+	unsubscribe(order_symbol_index);
 	
 	return 0;
 }
@@ -6565,12 +6564,6 @@ int on_key_pressed_order(int ch)
 		break;
 	case '/':
 	case '?':
-		order_corner_mode=ORDER_CORNER_MODE_SYMBOL;
-		order_corner_reset();
-		order_corner_refresh_screen();
-		break;
-	case '~':
-		order_corner_mode=ORDER_CORNER_MODE_ACCOUNT;
 		order_corner_reset();
 		order_corner_refresh_screen();
 		break;
@@ -6588,7 +6581,7 @@ void order_open_last_symbol()
 {
 	for(int i=0;i<vquotes.size();i++){
 		if(strcmp(order_last_symbol,vquotes[i].product_id)==0){
-			unsubscribe(vquotes[order_symbol_index].product_id);
+			unsubscribe(order_symbol_index);
 			strcpy(order_last_symbol,vquotes[order_symbol_index].product_id);
 			order_symbol_index=i;
 			order_curr_price=0;
@@ -8167,7 +8160,7 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 		return;
 	}
 
-	if(strlen(Instrument.InstrumentID)>0){
+	if(Instrument.InstrumentID[0]!='\0'){
 		quotation_t quote;
 		memset(&quote,0x00,sizeof(quote));
 		strcpy(quote.product_id,Instrument.InstrumentID);
@@ -8190,10 +8183,6 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 			quote.precision=5;
 		else
 			quote.precision=6;
-		quote.Instrument.PriceTick=Instrument.PriceTick;
-		quote.Instrument.VolumeMultiple=Instrument.VolumeMultiple;
-		quote.margin_ratio=Instrument.ShortMarginRatio;
-		sprintf(quote.Instrument.ExpireDate,"%s",Instrument.ExpireDate);
 		memcpy(&quote.Instrument, &Instrument, sizeof(Instrument));
 	
 		index = vquotes.size();
@@ -9185,8 +9174,6 @@ void CMarketRsp::HandleRtnDepthMarketData(CThostFtdcDepthMarketDataField& DepthM
 			vquotes[i].settle=DepthMarketData.SettlementPrice;
 			vquotes[i].openint=DepthMarketData.OpenInterest;
 			vquotes[i].average_price=DepthMarketData.AveragePrice;
-			vquotes[i].high_limit=DepthMarketData.UpperLimitPrice;
-			vquotes[i].low_limit=DepthMarketData.LowerLimitPrice;
 			vquotes[i].prev_settle=DepthMarketData.PreSettlementPrice;
 			vquotes[i].prev_close=DepthMarketData.PreClosePrice;
 			vquotes[i].prev_openint=DepthMarketData.PreOpenInterest;
@@ -9238,15 +9225,14 @@ int subscribe(size_t index)
 	
 	return 0;
 }
-int unsubscribe(const char *product_id)
+int unsubscribe(size_t index)
 {
 	char *ppInstrumentID[1];
-	int i;
 
-	if(!product_id){
-		for(i=0;i<vquotes.size();i++){
+	if(index==UINT_MAX){
+		for(size_t i=0;i<vquotes.size();i++){
 			if(vquotes[i].subscribed){
-				ppInstrumentID[0]=(char *)vquotes[i].product_id;
+				ppInstrumentID[0]=(char *)vquotes[i].Instrument.InstrumentID;
 				if(pMarketRsp->m_pMarketReq->UnSubscribeMarketData(ppInstrumentID, 1)<0)
 					return -1;
 				vquotes[i].subscribed=false;
@@ -9254,14 +9240,9 @@ int unsubscribe(const char *product_id)
 		}	
 		return 0;
 	}
-	ppInstrumentID[0]=(char *)product_id;
-	if(pMarketRsp->m_pMarketReq->UnSubscribeMarketData(ppInstrumentID, 1)<0)
-		return 0;
-	for(i=0;i<vquotes.size();i++)
-		if(strcmp(vquotes[i].product_id,product_id)==0){
-			vquotes[i].subscribed=false;
-			break;
-		}
+	ppInstrumentID[0] = (char*)vquotes[index].Instrument.InstrumentID;
+	pMarketRsp->m_pMarketReq->UnSubscribeMarketData(ppInstrumentID, 1);
+	vquotes[index].subscribed=false;
 	
 	return 0;
 }
@@ -9647,24 +9628,15 @@ void order_corner_display_matches()
 
 // 	if(strlen(strsearching)==0)
 // 		return;
-	if(order_corner_mode==ORDER_CORNER_MODE_SYMBOL){
-		for(i=order_corner_curr_pos,j=0;i<vquotes.size() && j<5;i++){
-			if(strnicmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0){
-				if(j==0 && strlen(order_strsearching)>0){
-					mvwprintw(order_corner_win,j+1,strlen(order_strsearching)+1,"%s",vquotes[i].product_id+strlen(order_strsearching));
-					mvwchgat(order_corner_win,j+1,strlen(order_strsearching)+1,strlen(vquotes[i].product_id)-strlen(order_strsearching),A_REVERSE,0,NULL);
-					strcpy(order_strmatch,vquotes[i].product_id);
-				}
-				mvwprintw(order_corner_win,j+2,1,"%s",vquotes[i].product_id);
-				j++;
+	for(i=order_corner_curr_pos,j=0;i<vquotes.size() && j<5;i++){
+		if(strnicmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0){
+			if(j==0 && strlen(order_strsearching)>0){
+				mvwprintw(order_corner_win,j+1,strlen(order_strsearching)+1,"%s",vquotes[i].product_id+strlen(order_strsearching));
+				mvwchgat(order_corner_win,j+1,strlen(order_strsearching)+1,strlen(vquotes[i].product_id)-strlen(order_strsearching),A_REVERSE,0,NULL);
+				strcpy(order_strmatch,vquotes[i].product_id);
 			}
-		}
-	}else{
-		for(i=order_corner_curr_pos,j=0;i<vAccounts.size() && j<5;i++){
-			if(strncmp(vAccounts[i].AccID,order_strsearching,strlen(order_strsearching))==0){
-				mvwprintw(order_corner_win,j+2,1,"%s",vAccounts[i].AccID);
-				j++;
-			}
+			mvwprintw(order_corner_win,j+2,1,"%s",vquotes[i].product_id);
+			j++;
 		}
 	}
 }
@@ -9680,43 +9652,10 @@ void order_corner_choose_item()
 	if(order_corner_curr_line>0){// selected
 		int i,j;
 		
-		if(order_corner_mode==ORDER_CORNER_MODE_SYMBOL){
-			for(i=order_corner_curr_pos,j=0;i<vquotes.size();i++){
-				if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0){
-					j++;
-					if(j==order_corner_curr_line){	// found
-						strcpy(order_last_symbol,vquotes[order_symbol_index].product_id);
-						order_corner_destroy();
-						order_symbol_index=i;
-						order_curr_price=0;
-						order_page_top_price=0;
-						order_refresh_screen();
-						order_centralize_current_price();
-						subscribe(order_symbol_index);
-						break;
-					}
-				}
-			}
-		}else{
-			for(i=order_corner_curr_pos,j=0;i<vAccounts.size();i++){
-				if(strncmp(vAccounts[i].AccID,order_strsearching,strlen(order_strsearching))==0){
-					j++;
-					if(j==order_corner_curr_line){	// found
-						order_corner_destroy();
-						strcpy(order_curr_accname,vAccounts[i].AccID);
-						order_refresh_screen();
-						break;
-					}
-
-				}
-			}
-		}
-	}else{// unselected
-		int i;
-		
-		if(order_corner_mode==ORDER_CORNER_MODE_SYMBOL){
-			for(i=0;i<vquotes.size();i++){
-				if(strcmp(vquotes[i].product_id,order_strmatch)==0){	// found
+		for(i=order_corner_curr_pos,j=0;i<vquotes.size();i++){
+			if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0){
+				j++;
+				if(j==order_corner_curr_line){	// found
 					strcpy(order_last_symbol,vquotes[order_symbol_index].product_id);
 					order_corner_destroy();
 					order_symbol_index=i;
@@ -9725,17 +9664,24 @@ void order_corner_choose_item()
 					order_refresh_screen();
 					order_centralize_current_price();
 					subscribe(order_symbol_index);
-					return;
+					break;
 				}
 			}
-		}else{
-			for(i=0;i<vAccounts.size();i++){
-				if(strcmp(vAccounts[i].AccID,order_strsearching)==0){	// found
-					order_corner_destroy();
-					strcpy(order_curr_accname,vAccounts[i].AccID);
-					order_refresh_screen();
-					return;
-				}
+		}
+	}else{// unselected
+		int i;
+		
+		for(i=0;i<vquotes.size();i++){
+			if(strcmp(vquotes[i].product_id,order_strmatch)==0){	// found
+				strcpy(order_last_symbol,vquotes[order_symbol_index].product_id);
+				order_corner_destroy();
+				order_symbol_index=i;
+				order_curr_price=0;
+				order_page_top_price=0;
+				order_refresh_screen();
+				order_centralize_current_price();
+				subscribe(order_symbol_index);
+				return;
 			}
 		}
 
@@ -9858,21 +9804,12 @@ void order_corner_move_forward_1_line()
 	if(order_corner_curr_line==0){	// first select
 		int i;
 		
-		if(order_corner_mode==ORDER_CORNER_MODE_SYMBOL){
-			for(i=order_corner_curr_pos;i<vquotes.size();i++){
-				if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0)
-					break;
-			}
-			if(i==vquotes.size())
-				return;
-		}else{
-			for(i=order_corner_curr_pos;i<vAccounts.size();i++){
-				if(strncmp(vAccounts[i].AccID,order_strsearching,strlen(order_strsearching))==0)
-					break;
-			}
-			if(i==vAccounts.size())
-				return;
+		for(i=order_corner_curr_pos;i<vquotes.size();i++){
+			if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0)
+				break;
 		}
+		if(i==vquotes.size())
+			return;
 		order_corner_curr_line=1;
 		order_corner_curr_pos=i;
 		order_corner_redraw();
@@ -9881,17 +9818,12 @@ void order_corner_move_forward_1_line()
 
 	int i,j;
 	
-	if(order_corner_mode==ORDER_CORNER_MODE_SYMBOL){
-		for(i=order_corner_curr_pos,j=0;i<vquotes.size() && j<=order_corner_curr_line;i++){
-			if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0)
-				j++;
-		}
-	}else{
-		for(i=order_corner_curr_pos,j=0;i<vAccounts.size() && j<=order_corner_curr_line;i++){
-			if(strncmp(vAccounts[i].AccID,order_strsearching,strlen(order_strsearching))==0)
-				j++;
-		}
+	
+	for(i=order_corner_curr_pos,j=0;i<vquotes.size() && j<=order_corner_curr_line;i++){
+		if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0)
+			j++;
 	}
+	
 	if(j<=order_corner_curr_line)	// Already bottom
 		return;
 
@@ -9900,27 +9832,16 @@ void order_corner_move_forward_1_line()
 	}else{
 		int i,j,next_pos;
 		
-		if(order_corner_mode==ORDER_CORNER_MODE_SYMBOL){
-			for(i=order_corner_curr_pos,j=0;i<vquotes.size();i++){
-				if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0){
-					j++;
-					if(j==2)
-						next_pos=i;
-					if(j>order_corner_curr_line)
-						break;
-				}
-			}
-		}else{
-			for(i=order_corner_curr_pos,j=0;i<vAccounts.size();i++){
-				if(strncmp(vAccounts[i].AccID,order_strsearching,strlen(order_strsearching))==0){
-					j++;
-					if(j==2)
-						next_pos=i;
-					if(j>order_corner_curr_line)
-						break;
-				}
+		for(i=order_corner_curr_pos,j=0;i<vquotes.size();i++){
+			if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0){
+				j++;
+				if(j==2)
+					next_pos=i;
+				if(j>order_corner_curr_line)
+					break;
 			}
 		}
+		
 		if(j<order_corner_curr_line)	// Already bottom
 			return;
 		order_corner_curr_pos=next_pos;
@@ -9933,21 +9854,13 @@ void order_corner_move_backward_1_line()
 	if(order_corner_curr_line==0){	// first select
 		int i;
 		
-		if(order_corner_mode==ORDER_CORNER_MODE_SYMBOL){
-			for(i=order_corner_curr_pos;i<vquotes.size();i++){
-				if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0)
-					break;
-			}
-			if(i==vquotes.size())
-				return;
-		}else{
-			for(i=order_corner_curr_pos;i<vAccounts.size();i++){
-				if(strncmp(vAccounts[i].AccID,order_strsearching,strlen(order_strsearching))==0)
-					break;
-			}
-			if(i==vquotes.size())
-				return;
+		for(i=order_corner_curr_pos;i<vquotes.size();i++){
+			if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0)
+				break;
 		}
+		if(i==vquotes.size())
+			return;
+		
 		order_corner_curr_line=1;
 		order_corner_curr_pos=i;
 		order_corner_redraw();
@@ -9957,16 +9870,9 @@ void order_corner_move_backward_1_line()
 	if(order_corner_curr_line==1){
 		int i;
 		
-		if(order_corner_mode==ORDER_CORNER_MODE_SYMBOL){
-			for(i=order_corner_curr_pos-1;i>=0;i--){
-				if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0)
-					break;
-			}
-		}else{
-			for(i=order_corner_curr_pos-1;i>=0;i--){
-				if(strncmp(vAccounts[i].AccID,order_strsearching,strlen(order_strsearching))==0)
-					break;
-			}
+		for (i = order_corner_curr_pos - 1; i >= 0; i--) {
+			if (strncmp(vquotes[i].product_id, order_strsearching, strlen(order_strsearching)) == 0)
+				break;
 		}
 		if(i<0)	// Already top
 			return;

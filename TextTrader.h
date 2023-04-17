@@ -183,17 +183,9 @@ typedef struct {
 	double open_price;
 	double prev_settle;
 	double min_movement;
-	double high_limit;
-	double low_limit;
 	int precision;
 	bool subscribed;
 	
-	TThostFtdcProductClassType product_type;
-	int option_type;
-	char product[20];
-	char underlying[30];
-	double margin_ratio;
-	int multiple;
 	CThostFtdcInstrumentField Instrument;
 	CThostFtdcDepthMarketDataField DepthMarketData;
 } quotation_t;
@@ -243,7 +235,7 @@ typedef struct {
 
 // Basic
 int subscribe(size_t index);
-int unsubscribe(const char *product_id);
+int unsubscribe(size_t index);
 const char *apistrerror(int e);
 void init_screen();
 void on_key_pressed(int ch);
