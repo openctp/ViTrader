@@ -100,4 +100,8 @@ build/MacOSX目录下，执行make，或打开xcode工程编译。
 
 ### 更多信息请关注公众号：
 
-![qrcode_for_gh_564e4bf4668c_258](https://user-images.githubusercontent.com/83346523/120348695-fbc80100-c32f-11eb-954f-6973d5f0ee11.jpg)
+<img src="https://user-images.githubusercontent.com/83346523/232570983-e28ce360-eb78-4aad-8a72-abebe288538a.png" alt="openctp公众号" width="300" height="350" />
+
+### QQ交流群：
+
+<img src="https://user-images.githubusercontent.com/83346523/232571215-d6f8b618-6491-45b2-bd3e-708b31902bb0.png" alt="QQ群二维码" width="300" height="500" />
