@@ -170,19 +170,7 @@ typedef struct {
 	char exchange_name[100];
 	char product_id[30];
 	char product_name[100];
-	double price;
-	int quantity;
 	int trade_volume;
-	double high;
-	double low;
-	double settle;
-	double prev_close;
-	int openint;
-	int prev_openint;
-	double average_price;
-	double open_price;
-	double prev_settle;
-	double min_movement;
 	int precision;
 	bool subscribed;
 	
