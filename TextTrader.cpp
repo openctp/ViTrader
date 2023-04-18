@@ -788,7 +788,7 @@ int goto_symbol_window_from_mainboard()
 	strcpy(symbol_curr_product_id,vquotes[curr_pos+curr_line-1].product_id);
 	working_window=WIN_SYMBOL;
 	symbol_refresh_screen();
-	unsubscribe(NULL);
+	unsubscribe(UINT_MAX);
 	
 	return 0;
 }
@@ -807,7 +807,7 @@ int goto_order_window_from_mainboard()
 	order_page_top_price=0;
 	order_refresh_screen();
 	order_centralize_current_price();
-	unsubscribe(NULL);
+	unsubscribe(UINT_MAX);
 	subscribe(order_symbol_index);
 
 	return 0;
@@ -817,7 +817,7 @@ int goto_orderlist_window_from_mainboard()
 {
 	working_window=WIN_ORDERLIST;
 	orderlist_refresh_screen();
-	unsubscribe(NULL);
+	unsubscribe(UINT_MAX);
 	
 	return 0;
 }
@@ -826,7 +826,7 @@ int goto_filllist_window_from_mainboard()
 {
 	working_window=WIN_FILLLIST;
 	filllist_refresh_screen();
-	unsubscribe(NULL);
+	unsubscribe(UINT_MAX);
 	
 	return 0;
 }
@@ -835,7 +835,7 @@ int goto_positionlist_window_from_mainboard()
 {
 	working_window=WIN_POSITION;
 	positionlist_refresh_screen();
-	unsubscribe(NULL);
+	unsubscribe(UINT_MAX);
 	
 	return 0;
 }
@@ -844,7 +844,7 @@ int goto_acclist_window_from_mainboard()
 {
 	working_window=WIN_MONEY;
 	acclist_refresh_screen();
-	unsubscribe(NULL);
+	unsubscribe(UINT_MAX);
 	
 	return 0;
 }
@@ -854,7 +854,7 @@ int goto_column_settings_window_from_mainboard()
 	working_window=WIN_COLUMN_SETTINGS;
 	column_settings_curr_line=1;
 	column_settings_refresh_screen();
-	unsubscribe(NULL);
+	unsubscribe(UINT_MAX);
 	
 	return 0;
 }
@@ -1118,7 +1118,7 @@ int goto_file_top()
 		n=vquotes.size()<max_lines?vquotes.size():max_lines;
 		curr_pos=0;
 		curr_line=1;
-		unsubscribe(NULL);
+		unsubscribe(UINT_MAX);
 		for(size_t i=0;i<n;i++){
 			display_quotation(curr_pos+i);
 			subscribe(curr_pos+i);
@@ -1146,7 +1146,7 @@ int goto_file_bottom()
 		mvchgat(curr_line,0,-1,A_NORMAL,0,NULL);
 		curr_pos=vquotes.size()-max_lines;
 		curr_line=max_lines;
-		unsubscribe(NULL);
+		unsubscribe(UINT_MAX);
 		for(int i=0;i<max_lines;i++){
 			display_quotation(curr_pos+i);
 			subscribe(curr_pos+i);
