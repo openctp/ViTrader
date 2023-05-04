@@ -101,6 +101,7 @@ std::vector<quotation_t> vquotes;
 std::vector<CThostFtdcOrderField> vOrders;
 std::vector<CThostFtdcTradeField> vFilledOrders;
 std::vector<stPosition_t> vPositions;
+std::map<std::string, size_t> mPositionIndex;
 std::vector<stAccount_t> vAccounts;
 std::vector<CThostFtdcInputOrderField> vInputingOrders;
 std::vector<CThostFtdcInputOrderActionField> vCancelingOrders;
@@ -1366,10 +1367,8 @@ void CTradeRsp::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAct
 void CTradeRsp::OnRtnOrder(CThostFtdcOrderField *pOrder)
 {
 	CThostFtdcOrderField Order;
-	CThostFtdcRspInfoField RspInfo;
 
 	memset(&Order,0x00,sizeof(Order));
-	memset(&RspInfo,0x00,sizeof(RspInfo));
 	if(pOrder)
 		memcpy(&Order,pOrder,sizeof(Order));
 	post_task(std::bind(&CTradeRsp::HandleRtnOrder,this,Order));
@@ -1378,10 +1377,8 @@ void CTradeRsp::OnRtnOrder(CThostFtdcOrderField *pOrder)
 void CTradeRsp::OnRtnTrade(CThostFtdcTradeField *pTrade)
 {
 	CThostFtdcTradeField Trade;
-	CThostFtdcRspInfoField RspInfo;
 
 	memset(&Trade,0x00,sizeof(Trade));
-	memset(&RspInfo,0x00,sizeof(RspInfo));
 	if(pTrade)
 		memcpy(&Trade,pTrade,sizeof(Trade));
 	post_task(std::bind(&CTradeRsp::HandleRtnTrade,this,Trade));
@@ -8660,7 +8657,7 @@ void CTradeRsp::HandleRtnOrder(CThostFtdcOrderField& Order)
 	std::vector<stPosition_t>::iterator iterPosi;
 	std::vector<CThostFtdcInputOrderActionField>::iterator iterCancelingOrder;
 	bool bExists=false;
-	if(strlen(Order.InstrumentID)!=0){
+	if(Order.InstrumentID[0]!='\0'){
 		for(iter=vOrders.begin();iter!=vOrders.end();iter++){
 			if(Order.FrontID==iter->FrontID && Order.SessionID==iter->SessionID && strcmp(Order.OrderRef,iter->OrderRef)==0){
 				if(iter->OrderStatus!=THOST_FTDC_OST_Canceled && iter->OrderStatus!=THOST_FTDC_OST_AllTraded){
@@ -8740,44 +8737,42 @@ void CTradeRsp::HandleRtnOrder(CThostFtdcOrderField& Order)
 		}
 		if(!bExists){
 			if(Order.OrderStatus!=THOST_FTDC_OST_Canceled && Order.OrderStatus!=THOST_FTDC_OST_AllTraded){ // 如果是新定单，且已撤消或已全部成交，就不会影响处理冻结仓位
-				for(iterPosi=vPositions.begin();iterPosi!=vPositions.end();iterPosi++){
-					if(strcmp(Order.InvestorID,iterPosi->AccID)==0 && strcmp(Order.InstrumentID,iterPosi->InstrumentID)==0)
-						break;
-				}
-				if(iterPosi!=vPositions.end()){
+				auto iterIndex = mPositionIndex.find(Order.InstrumentID);
+				if (iterIndex != mPositionIndex.end()) {
+					auto& Posi = vPositions[iterIndex->second];
 					switch(Order.OrderStatus){
 					case THOST_FTDC_OST_PartTradedQueueing:	//部分成交冻结相应的仓位
 						if(Order.Direction==THOST_FTDC_D_Buy){
 							if(Order.CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
-								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (iterPosi->SellVolume-iterPosi->TodaySellVolume)==0)
-									iterPosi->TodayFrozenSellVolume+=Order.VolumeTotal;
-								iterPosi->FrozenSellVolume+=Order.VolumeTotal;
+								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (Posi.SellVolume-Posi.TodaySellVolume)==0)
+									Posi.TodayFrozenSellVolume+=Order.VolumeTotal;
+								Posi.FrozenSellVolume+=Order.VolumeTotal;
 							}
-							iterPosi->BuyingVolume+=Order.VolumeTotal;
+							Posi.BuyingVolume+=Order.VolumeTotal;
 						}else{
 							if(Order.CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
-								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (iterPosi->BuyVolume-iterPosi->TodayBuyVolume)==0)
-									iterPosi->TodayFrozenBuyVolume+=Order.VolumeTotal;
-								iterPosi->FrozenBuyVolume+=Order.VolumeTotal;
+								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (Posi.BuyVolume-Posi.TodayBuyVolume)==0)
+									Posi.TodayFrozenBuyVolume+=Order.VolumeTotal;
+								Posi.FrozenBuyVolume+=Order.VolumeTotal;
 							}
-							iterPosi->SellingVolume+=Order.VolumeTotal;
+							Posi.SellingVolume+=Order.VolumeTotal;
 						}
 						break;
 					default:	// 未成交冻结仓位
 						if(Order.Direction==THOST_FTDC_D_Buy){
 							if(Order.CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
-								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (iterPosi->SellVolume-iterPosi->TodaySellVolume)==0)
-									iterPosi->TodayFrozenSellVolume+=Order.VolumeTotal;
-								iterPosi->FrozenSellVolume+=Order.VolumeTotal;
+								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (Posi.SellVolume-Posi.TodaySellVolume)==0)
+									Posi.TodayFrozenSellVolume+=Order.VolumeTotal;
+								Posi.FrozenSellVolume+=Order.VolumeTotal;
 							}
-							iterPosi->BuyingVolume+=Order.VolumeTotal;
+							Posi.BuyingVolume+=Order.VolumeTotal;
 						}else{
 							if(Order.CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
-								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (iterPosi->BuyVolume-iterPosi->TodayBuyVolume)==0)
-									iterPosi->TodayFrozenBuyVolume+=Order.VolumeTotal;
-								iterPosi->FrozenBuyVolume+=Order.VolumeTotal;
+								if(Order.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (Posi.BuyVolume-Posi.TodayBuyVolume)==0)
+									Posi.TodayFrozenBuyVolume+=Order.VolumeTotal;
+								Posi.FrozenBuyVolume+=Order.VolumeTotal;
 							}
-							iterPosi->SellingVolume+=Order.VolumeTotal;
+							Posi.SellingVolume+=Order.VolumeTotal;
 						}
 						break;
 					}
@@ -8829,6 +8824,7 @@ void CTradeRsp::HandleRtnOrder(CThostFtdcOrderField& Order)
 						}
 						break;
 					}
+					mPositionIndex[Order.InstrumentID] = vPositions.size();
 					vPositions.push_back(Posi);
 				}
 			}
@@ -8877,34 +8873,34 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 		vFilledOrders.push_back(Trade);
 
 		// Update Position Info
-		std::vector<stPosition_t>::iterator iterPosi;
-		for(iterPosi=vPositions.begin();iterPosi!=vPositions.end();iterPosi++){
-			if(strcmp(iterPosi->AccID,Trade.InvestorID)==0 && strcmp(iterPosi->InstrumentID,Trade.InstrumentID)==0){
-				if(Trade.Direction==THOST_FTDC_D_Buy){
-					if(Trade.OffsetFlag==THOST_FTDC_OF_Open){
-						iterPosi->BuyVolume+=Trade.Volume;
-						iterPosi->TodayBuyVolume+=Trade.Volume;
-					}else{
-						if(Trade.OffsetFlag==THOST_FTDC_OF_CloseToday || (iterPosi->SellVolume-iterPosi->TodaySellVolume)==0)
-							iterPosi->TodaySellVolume-=Trade.Volume;
-						iterPosi->SellVolume-=Trade.Volume;
-					}
-					iterPosi->Volume+=Trade.Volume;
-				}else{
-					if(Trade.OffsetFlag==THOST_FTDC_OF_Open){
-						iterPosi->SellVolume+=Trade.Volume;
-						iterPosi->TodaySellVolume+=Trade.Volume;
-					}else{
-						if(Trade.OffsetFlag==THOST_FTDC_OF_CloseToday || (iterPosi->BuyVolume-iterPosi->TodayBuyVolume)==0)
-							iterPosi->TodayBuyVolume-=Trade.Volume;
-						iterPosi->BuyVolume-=Trade.Volume;
-					}
-					iterPosi->Volume-=Trade.Volume;
+		auto iterIndex = mPositionIndex.find(Trade.InstrumentID);
+		if (iterIndex != mPositionIndex.end()) {
+			auto& Posi = vPositions[iterIndex->second];
+			if (Trade.Direction == THOST_FTDC_D_Buy) {
+				if (Trade.OffsetFlag == THOST_FTDC_OF_Open) {
+					Posi.BuyVolume += Trade.Volume;
+					Posi.TodayBuyVolume += Trade.Volume;
 				}
-				break;
+				else {
+					if (Trade.OffsetFlag == THOST_FTDC_OF_CloseToday || (Posi.SellVolume - Posi.TodaySellVolume) == 0)
+						Posi.TodaySellVolume -= Trade.Volume;
+					Posi.SellVolume -= Trade.Volume;
+				}
+				Posi.Volume += Trade.Volume;
 			}
-		}
-		if(iterPosi==vPositions.end()){
+			else {
+				if (Trade.OffsetFlag == THOST_FTDC_OF_Open) {
+					Posi.SellVolume += Trade.Volume;
+					Posi.TodaySellVolume += Trade.Volume;
+				}
+				else {
+					if (Trade.OffsetFlag == THOST_FTDC_OF_CloseToday || (Posi.BuyVolume - Posi.TodayBuyVolume) == 0)
+						Posi.TodayBuyVolume -= Trade.Volume;
+					Posi.BuyVolume -= Trade.Volume;
+				}
+				Posi.Volume -= Trade.Volume;
+			}
+		} else {
 			stPosition_t Posi;
 			memset(&Posi,0x00,sizeof(Posi));
 			strcpy(Posi.InstrumentID,Trade.InstrumentID);
@@ -8932,6 +8928,7 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 				}
 				Posi.Volume-=Trade.Volume;
 			}
+			mPositionIndex[Posi.InstrumentID] = vPositions.size();
 			vPositions.push_back(Posi);
 		}
 		switch(working_window){
