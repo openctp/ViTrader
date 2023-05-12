@@ -9140,18 +9140,17 @@ void CMarketRsp::HandleRspUserLogout(CThostFtdcUserLogoutField& UserLogout,CThos
 
 void CMarketRsp::HandleRtnDepthMarketData(CThostFtdcDepthMarketDataField& DepthMarketData)
 {
-	size_t i;
+	auto iter = mInstrumentIndex.find(DepthMarketData.InstrumentID);
+	if (iter == mInstrumentIndex.end())
+		return;
+	size_t i = iter->second;
 	
-	for(i=0;i<vquotes.size();i++){
-		if(strcmp(DepthMarketData.InstrumentID,vquotes[i].Instrument.InstrumentID)==0){
-			if(vquotes[i].DepthMarketData.Volume!=DepthMarketData.Volume)
-				vquotes[i].trade_volume=DepthMarketData.Volume-vquotes[i].DepthMarketData.Volume;
-			if(strcmp(vquotes[i].exchange_id,"CZCE")!=0)
-				vquotes[i].DepthMarketData.AveragePrice/=vquotes[i].Instrument.VolumeMultiple;
-			memcpy(&vquotes[i].DepthMarketData, &DepthMarketData, sizeof(DepthMarketData));
-			break;
-		}
-	}
+	if(vquotes[i].DepthMarketData.Volume!=DepthMarketData.Volume)
+		vquotes[i].trade_volume=DepthMarketData.Volume-vquotes[i].DepthMarketData.Volume;
+	if(strcmp(vquotes[i].exchange_id,"CZCE")!=0)
+		vquotes[i].DepthMarketData.AveragePrice/=vquotes[i].Instrument.VolumeMultiple;
+	memcpy(&vquotes[i].DepthMarketData, &DepthMarketData, sizeof(DepthMarketData));
+
 	switch(working_window){
 	case WIN_MAINBOARD:
 		display_quotation(i);
