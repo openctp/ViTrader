@@ -22,6 +22,7 @@
 #include <atomic>
 #include "INIReader.h"
 #include <string.h>
+#include <climits>
 
 #ifndef WIN32
 #define strnicmp strncasecmp
@@ -406,6 +407,7 @@ void status_print(const char* fmt, ...)
 int main(int argc,char *argv[])
 {
 	std::string market_serv_addr, trade_serv_addr, broker, UserProductInfo, AuthCode, AppID, user, password, market_user, market_password;
+	std::string trade_name_server,market_name_server;
 
 	INIReader reader("TextTrader.ini");
 
@@ -424,6 +426,8 @@ int main(int argc,char *argv[])
 	password = reader.Get("trade", "password", "");
 	market_user = reader.Get("market", "user", "");
 	market_password = reader.Get("market", "password", "");
+	trade_name_server = reader.Get("trade", "NameServer", "");
+	market_name_server = reader.Get("market", "NameServer", "");
 
 	int ch;
 	char user_trade_flow_path[256],user_market_flow_path[256];
@@ -442,9 +446,6 @@ int main(int argc,char *argv[])
 	if (market_password == "")
 		market_password = password;
 
-	/* net start */
-	//think_netstart();
-
 	// Market	
 	pMarketRsp=new CMarketRsp();
 	strcpy(pMarketRsp->marketserv, market_serv_addr.c_str());
@@ -454,7 +455,17 @@ int main(int argc,char *argv[])
 	strcpy(pMarketRsp->passwd, market_password.c_str());
 	pMarketRsp->m_pMarketReq=CThostFtdcMdApi::CreateFtdcMdApi(user_market_flow_path);
 	pMarketRsp->m_pMarketReq->RegisterSpi(pMarketRsp);
-	pMarketRsp->m_pMarketReq->RegisterFront((char*)market_serv_addr.c_str());
+	if(market_name_server.length()){
+		CThostFtdcFensUserInfoField FensUserInfo;
+		memset(&FensUserInfo,0x00,sizeof(FensUserInfo));
+		strncpy(FensUserInfo.BrokerID,broker.c_str(),sizeof(FensUserInfo.BrokerID)-1);
+		strncpy(FensUserInfo.UserID,broker.c_str(),sizeof(FensUserInfo.UserID)-1);
+		FensUserInfo.LoginMode = THOST_FTDC_LM_Trade;
+		pMarketRsp->m_pMarketReq->RegisterFensUserInfo(&FensUserInfo);
+		pMarketRsp->m_pMarketReq->RegisterNameServer((char*)market_name_server.c_str());
+	}else{
+		pMarketRsp->m_pMarketReq->RegisterFront((char*)market_serv_addr.c_str());
+	}
 	pMarketRsp->m_pMarketReq->Init();
 
 
@@ -479,7 +490,17 @@ int main(int argc,char *argv[])
 	sprintf(user_trade_flow_path,"%s_%s_trade", broker.c_str(), user.c_str());
 	pTradeRsp->m_pTradeReq=CThostFtdcTraderApi::CreateFtdcTraderApi(user_trade_flow_path);
 	pTradeRsp->m_pTradeReq->RegisterSpi(pTradeRsp);
-	pTradeRsp->m_pTradeReq->RegisterFront((char*)trade_serv_addr.c_str());
+	if(trade_name_server.length()){
+		CThostFtdcFensUserInfoField FensUserInfo;
+		memset(&FensUserInfo,0x00,sizeof(FensUserInfo));
+		strncpy(FensUserInfo.BrokerID,broker.c_str(),sizeof(FensUserInfo.BrokerID)-1);
+		strncpy(FensUserInfo.UserID,broker.c_str(),sizeof(FensUserInfo.UserID)-1);
+		FensUserInfo.LoginMode = THOST_FTDC_LM_Trade;
+		pTradeRsp->m_pTradeReq->RegisterFensUserInfo(&FensUserInfo);
+		pTradeRsp->m_pTradeReq->RegisterNameServer((char*)trade_name_server.c_str());
+	}else{
+		pTradeRsp->m_pTradeReq->RegisterFront((char*)trade_serv_addr.c_str());
+	}
 	pTradeRsp->m_pTradeReq->SubscribePrivateTopic(THOST_TERT_RESTART);
 	pTradeRsp->m_pTradeReq->SubscribePublicTopic(THOST_TERT_RESTART);
 	pTradeRsp->m_pTradeReq->Init();
