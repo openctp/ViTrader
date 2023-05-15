@@ -408,6 +408,7 @@ int main(int argc,char *argv[])
 {
 	std::string market_serv_addr, trade_serv_addr, broker, UserProductInfo, AuthCode, AppID, user, password, market_user, market_password;
 	std::string trade_name_server,market_name_server;
+	std::string ClientIPAddress,MacAddress,LoginRemark;
 
 	INIReader reader("TextTrader.ini");
 
@@ -424,6 +425,9 @@ int main(int argc,char *argv[])
 	AppID = reader.Get("trade", "AppID", "");
 	user = reader.Get("trade", "user", "");
 	password = reader.Get("trade", "password", "");
+	ClientIPAddress = reader.Get("trade", "ClientIPAddress", "");
+	MacAddress = reader.Get("trade", "MacAddress", "");
+	LoginRemark = reader.Get("trade", "LoginRemark", "");
 	market_user = reader.Get("market", "user", "");
 	market_password = reader.Get("market", "password", "");
 	trade_name_server = reader.Get("trade", "NameServer", "");
@@ -482,6 +486,9 @@ int main(int argc,char *argv[])
 	strcpy(pTradeRsp->user, user.c_str());
 	strcpy(pTradeRsp->passwd, password.c_str());
 	strcpy(pTradeRsp->UserProductInfo,UserProductInfo.c_str());
+	strcpy(pTradeRsp->ClientIPAddress,ClientIPAddress.c_str());
+	strcpy(pTradeRsp->MacAddress,MacAddress.c_str());
+	strcpy(pTradeRsp->LoginRemark,LoginRemark.c_str());
 	strcpy(pTradeRsp->AppID,AppID.c_str());
 	strcpy(pTradeRsp->AuthCode,AuthCode.c_str());
 	strcpy(pTradeRsp->name, user.c_str());
@@ -2808,6 +2815,7 @@ void order_move_complete()
 			strncpy(Req.ExchangeID,iter->ExchangeID,sizeof(Req.ExchangeID)-1);
 			strcpy(Req.InstrumentID,iter->InstrumentID);
 			strcpy(Req.OrderRef,iter->OrderRef);
+			Req.OrderActionRef=pTradeRsp->TradeOrderRef++;
 			Req.FrontID=iter->FrontID;
 			Req.SessionID=iter->SessionID;
 			strcpy(Req.OrderSysID,iter->OrderSysID);
@@ -3158,6 +3166,7 @@ void order_cancel_orders_at_price(double price)
 			strcpy(Req.ExchangeID,iter->ExchangeID);
 			strcpy(Req.InstrumentID,iter->InstrumentID);
 			strcpy(Req.OrderRef,iter->OrderRef);
+			Req.OrderActionRef=pTradeRsp->TradeOrderRef++;
 			Req.FrontID=iter->FrontID;
 			Req.SessionID=iter->SessionID;
 			strcpy(Req.OrderSysID,iter->OrderSysID);
@@ -8063,6 +8072,9 @@ void CTradeRsp::HandleRspAuthenticate(CThostFtdcRspAuthenticateField& RspAuthent
 	strcpy(Req.UserID,user);
 	strcpy(Req.Password,passwd);
 	sprintf(Req.UserProductInfo,"%s",UserProductInfo);
+	sprintf(Req.ClientIPAddress,"%s",ClientIPAddress);
+	sprintf(Req.MacAddress,"%s",MacAddress);
+	sprintf(Req.LoginRemark,"%s",LoginRemark);
 	m_pTradeReq->ReqUserLogin(&Req,m_nTradeRequestID++);
 }
 

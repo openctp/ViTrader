@@ -114,6 +114,9 @@ public:
 	char tradeserv[256];
 	char license[20];
 	TThostFtdcProductInfoType	UserProductInfo;
+	TThostFtdcIPAddressType		ClientIPAddress;
+	TThostFtdcMacAddressType	MacAddress;
+	TThostFtdcLoginRemarkType	LoginRemark;
 	TThostFtdcAuthCodeType	AuthCode;
 	TThostFtdcAppIDType	AppID;
 	std::vector<CThostFtdcOrderField> m_mMovingOrders;
