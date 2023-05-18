@@ -3209,6 +3209,7 @@ void order_cancel_all_orders()
 		strcpy(Req.ExchangeID,iter->ExchangeID);
 		strcpy(Req.InstrumentID,iter->InstrumentID);
 		strcpy(Req.OrderRef,iter->OrderRef);
+		Req.OrderActionRef=pTradeRsp->TradeOrderRef++;
 		Req.FrontID=iter->FrontID;
 		Req.SessionID=iter->SessionID;
 		strcpy(Req.OrderSysID,iter->OrderSysID);
@@ -8110,7 +8111,7 @@ void CTradeRsp::HandleRspUserLogin(CThostFtdcRspUserLoginField& RspUserLogin,CTh
 	TradeConnectionStatus=CONNECTION_STATUS_LOGINOK;
 	TradeFrontID=RspUserLogin.FrontID;
 	TradeSessionID=RspUserLogin.SessionID;
-	TradeOrderRef=1;
+	TradeOrderRef=atol(RspUserLogin.MaxOrderRef);
 	sprintf(tradedate,"%4.4s-%2.2s-%2.2s",RspUserLogin.TradingDay,RspUserLogin.TradingDay+4,RspUserLogin.TradingDay+6);
 	display_status();
 
