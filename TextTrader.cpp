@@ -8102,16 +8102,18 @@ void CTradeRsp::HandleRspUserLogin(CThostFtdcRspUserLoginField& RspUserLogin,CTh
 		}
 	}
 
-	// reset windows
-	orderlist_reset(user);
-	filllist_reset(user);
-	positionlist_reset(user);
-	acclist_reset(user);
+	// reset windows on new TradingDay.
+	if (strcmp(RspUserLogin.TradingDay, tradedate) != 0) {
+		orderlist_reset(user);
+		filllist_reset(user);
+		positionlist_reset(user);
+		acclist_reset(user);
+	}
 
 	TradeConnectionStatus=CONNECTION_STATUS_LOGINOK;
 	TradeFrontID=RspUserLogin.FrontID;
 	TradeSessionID=RspUserLogin.SessionID;
-	TradeOrderRef=atol(RspUserLogin.MaxOrderRef);
+	TradeOrderRef=atol(RspUserLogin.MaxOrderRef)+1;
 	sprintf(tradedate,"%4.4s-%2.2s-%2.2s",RspUserLogin.TradingDay,RspUserLogin.TradingDay+4,RspUserLogin.TradingDay+6);
 	display_status();
 
