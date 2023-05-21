@@ -8113,7 +8113,7 @@ void CTradeRsp::HandleRspUserLogin(CThostFtdcRspUserLoginField& RspUserLogin,CTh
 	TradeConnectionStatus=CONNECTION_STATUS_LOGINOK;
 	TradeFrontID=RspUserLogin.FrontID;
 	TradeSessionID=RspUserLogin.SessionID;
-	TradeOrderRef=atol(RspUserLogin.MaxOrderRef)+1;
+	TradeOrderRef=atol(RspUserLogin.MaxOrderRef);
 	sprintf(tradedate,"%4.4s-%2.2s-%2.2s",RspUserLogin.TradingDay,RspUserLogin.TradingDay+4,RspUserLogin.TradingDay+6);
 	display_status();
 
