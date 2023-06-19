@@ -501,7 +501,7 @@ int main(int argc,char *argv[])
 		CThostFtdcFensUserInfoField FensUserInfo;
 		memset(&FensUserInfo,0x00,sizeof(FensUserInfo));
 		strncpy(FensUserInfo.BrokerID,broker.c_str(),sizeof(FensUserInfo.BrokerID)-1);
-		strncpy(FensUserInfo.UserID,broker.c_str(),sizeof(FensUserInfo.UserID)-1);
+		strncpy(FensUserInfo.UserID,user.c_str(),sizeof(FensUserInfo.UserID)-1);
 		FensUserInfo.LoginMode = THOST_FTDC_LM_Trade;
 		pTradeRsp->m_pTradeReq->RegisterFensUserInfo(&FensUserInfo);
 		pTradeRsp->m_pTradeReq->RegisterNameServer((char*)trade_name_server.c_str());
