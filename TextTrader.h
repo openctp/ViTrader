@@ -234,6 +234,9 @@ void time_thread();
 void work_thread();
 void HandleTickTimeout();
 void HandleStatusClear();
+double GetProfitLoss(const char* InstrumentID);
+double GetBuyProfitLoss(const char* InstrumentID);
+double GetSellProfitLoss(const char* InstrumentID);
 
 // Main Board
 void refresh_screen();

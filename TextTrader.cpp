@@ -756,6 +756,107 @@ void post_task(std::function<void()> task)
 	_sem.signal();
 }
 
+double GetProfitLoss(const char* InstrumentID)
+{
+	return GetBuyProfitLoss(InstrumentID) + GetSellProfitLoss(InstrumentID);
+}
+
+double GetBuyProfitLoss(const char* InstrumentID)
+{
+	auto iterInstrument = mInstrumentIndex.find(InstrumentID);
+	if (iterInstrument == mInstrumentIndex.end())
+		return 0;
+	size_t i = iterInstrument->second;
+
+	int precision = vquotes[i].precision;
+	double high_limit = vquotes[i].DepthMarketData.UpperLimitPrice;
+	double low_limit = vquotes[i].DepthMarketData.LowerLimitPrice;
+	double PriceTick = vquotes[i].Instrument.PriceTick;
+	double close_price = vquotes[i].DepthMarketData.LastPrice;
+	double prev_settle = vquotes[i].DepthMarketData.PreSettlementPrice;
+	int quantity = vquotes[i].DepthMarketData.Volume;
+	int nPosi = 0, nBuyPosi = 0, nSellPosi = 0;
+	double AvgBuyPrice = 0, AvgSellPrice = 0;
+
+	double offset;
+	double ratio;
+	if (close_price == DBL_MAX || close_price == 0 || prev_settle == DBL_MAX || prev_settle == 0) {
+		offset = 0;
+		ratio = 0;
+	}
+	else {
+		offset = close_price - prev_settle;
+		ratio = (close_price - prev_settle) / prev_settle * 100.0;
+	}
+
+	std::vector<stPosition_t>::iterator iter;
+	for (iter = vPositions.begin(); iter != vPositions.end(); iter++) {
+		if (strcmp(iter->AccID, order_curr_accname) == 0 && strcmp(iter->InstrumentID, vquotes[i].product_id) == 0)
+			break;
+	}
+	if (iter != vPositions.end()) {
+		nPosi = iter->Volume;
+		nBuyPosi = iter->BuyVolume;
+		nSellPosi = iter->SellVolume;
+		AvgBuyPrice = iter->AvgBuyPrice;
+		AvgSellPrice = iter->AvgSellPrice;
+	}
+
+	double PL = 0;
+	if (nBuyPosi && close_price != DBL_MAX)
+		PL = (close_price - AvgBuyPrice) * nBuyPosi * vquotes[i].Instrument.VolumeMultiple;
+
+	return PL;
+}
+
+double GetSellProfitLoss(const char* InstrumentID)
+{
+	auto iterInstrument = mInstrumentIndex.find(InstrumentID);
+	if (iterInstrument == mInstrumentIndex.end())
+		return 0;
+	size_t i = iterInstrument->second;
+
+	int precision = vquotes[i].precision;
+	double high_limit = vquotes[i].DepthMarketData.UpperLimitPrice;
+	double low_limit = vquotes[i].DepthMarketData.LowerLimitPrice;
+	double PriceTick = vquotes[i].Instrument.PriceTick;
+	double close_price = vquotes[i].DepthMarketData.LastPrice;
+	double prev_settle = vquotes[i].DepthMarketData.PreSettlementPrice;
+	int quantity = vquotes[i].DepthMarketData.Volume;
+	int nPosi = 0, nBuyPosi = 0, nSellPosi = 0;
+	double AvgBuyPrice = 0, AvgSellPrice = 0;
+
+	double offset;
+	double ratio;
+	if (close_price == DBL_MAX || close_price == 0 || prev_settle == DBL_MAX || prev_settle == 0) {
+		offset = 0;
+		ratio = 0;
+	}
+	else {
+		offset = close_price - prev_settle;
+		ratio = (close_price - prev_settle) / prev_settle * 100.0;
+	}
+
+	std::vector<stPosition_t>::iterator iter;
+	for (iter = vPositions.begin(); iter != vPositions.end(); iter++) {
+		if (strcmp(iter->AccID, order_curr_accname) == 0 && strcmp(iter->InstrumentID, vquotes[i].product_id) == 0)
+			break;
+	}
+	if (iter != vPositions.end()) {
+		nPosi = iter->Volume;
+		nBuyPosi = iter->BuyVolume;
+		nSellPosi = iter->SellVolume;
+		AvgBuyPrice = iter->AvgBuyPrice;
+		AvgSellPrice = iter->AvgSellPrice;
+	}
+
+	double PL = 0;
+	if (nSellPosi && close_price != DBL_MAX)
+		PL = (AvgSellPrice - close_price) * nSellPosi * vquotes[i].Instrument.VolumeMultiple;
+
+	return PL;
+}
+
 void HandleStatusClear()
 {
 	memset(status_message, 0x00, sizeof(status_message));
@@ -4616,7 +4717,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 			x+=positionlist_column_items[POSITIONLIST_COL_AVG_PRICE].width+1;
 			break;
 		case POSITIONLIST_COL_PROFITLOSS:		//product_name
-			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_PROFITLOSS].width,vPositions[i].ProfitLoss);
+			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_PROFITLOSS].width,GetProfitLoss(vPositions[i].InstrumentID));
 			x+=positionlist_column_items[POSITIONLIST_COL_PROFITLOSS].width+1;
 			break;
 		case POSITIONLIST_COL_MARGIN:		//close
@@ -4639,7 +4740,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 			x+=positionlist_column_items[POSITIONLIST_COL_BUY_PRICE].width+1;
 			break;
 		case POSITIONLIST_COL_BUY_PROFITLOSS:		//product_name
-			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_BUY_PROFITLOSS].width,vPositions[i].BuyProfitLoss);
+			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_BUY_PROFITLOSS].width, GetBuyProfitLoss(vPositions[i].InstrumentID));
 			x+=positionlist_column_items[POSITIONLIST_COL_BUY_PROFITLOSS].width+1;
 			break;
 		case POSITIONLIST_COL_BUY_TODAY:		//volume
@@ -4658,7 +4759,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 			x+=positionlist_column_items[POSITIONLIST_COL_SELL_PRICE].width+1;
 			break;
 		case POSITIONLIST_COL_SELL_PROFITLOSS:		//product_name
-			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_SELL_PROFITLOSS].width,vPositions[i].BuyProfitLoss);
+			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_SELL_PROFITLOSS].width, GetSellProfitLoss(vPositions[i].InstrumentID));
 			x+=positionlist_column_items[POSITIONLIST_COL_SELL_PROFITLOSS].width+1;
 			break;
 		case POSITIONLIST_COL_SELL_TODAY:		//volume
@@ -5602,6 +5703,7 @@ void order_display_title()
 	double prev_settle=vquotes[order_symbol_index].DepthMarketData.PreSettlementPrice;
 	int quantity=vquotes[order_symbol_index].DepthMarketData.Volume;
 	int nPosi=0,nBuyPosi=0,nSellPosi=0;
+	double AvgBuyPrice = 0, AvgSellPrice = 0;
 
 	double offset;
 	double ratio;
@@ -5622,6 +5724,8 @@ void order_display_title()
 		nPosi=iter->Volume;
 		nBuyPosi=iter->BuyVolume;
 		nSellPosi=iter->SellVolume;
+		AvgBuyPrice = iter->AvgBuyPrice;
+		AvgSellPrice = iter->AvgSellPrice;
 	}
 
 // 	int buy_quantity=0,sell_quantity=0;
@@ -5707,7 +5811,11 @@ void order_display_title()
 	//}
 	//if(strlen(strsellorders)==0)
 	//	strcpy(strsellorders,"0");
-
+	double PL = 0;
+	if (nBuyPosi && close_price != DBL_MAX)
+		PL += (close_price - AvgBuyPrice) * nBuyPosi * vquotes[order_symbol_index].Instrument.VolumeMultiple;
+	if (nSellPosi && close_price != DBL_MAX)
+		PL += (AvgSellPrice - close_price) * nSellPosi * vquotes[order_symbol_index].Instrument.VolumeMultiple;
 	if(nBuyPosi!=0 && nSellPosi!=0){
 		mvprintw(0,0,"%s  %.*f(%.1f%%)  ³Ö²Ö:%d*(%d/%d)  Ó¯¿÷:%.2f\n",
 			vquotes[order_symbol_index].product_name,	// ºÏÔ¼
@@ -5723,7 +5831,7 @@ void order_display_title()
 			//strsellorders,
 // 			buy_quantity,	//¹ÒÂòÁ¿
 // 			sell_quantity==0?0:-1*sell_quantity,	//¹ÒÂôÁ¿
-			0.0);	// Ó¯¿÷
+			PL);	// Ó¯¿÷
 	}else{
 		mvprintw(0,0,"%s  %.*f(%.1f%%)  ³Ö²Ö:%d  Ó¯¿÷:%.2f\n",
 			vquotes[order_symbol_index].product_name,	// ºÏÔ¼
@@ -5737,10 +5845,11 @@ void order_display_title()
 			//strsellorders,
 // 			buy_quantity,	//¹ÒÂòÁ¿
 // 			sell_quantity==0?0:-1*sell_quantity,	//¹ÒÂôÁ¿
-			0.0);	// Ó¯¿÷
+			PL);	// Ó¯¿÷
 	}
 	mvprintw(1,0,"%10s %10s %10s %10s %10s\n","ÂòÈë","½ÐÂò","¼Û¸ñ","½ÐÂô","Âô³ö");
 }
+
 void column_settings_display_title()
 {
 	if(working_window!=WIN_COLUMN_SETTINGS)
@@ -8393,7 +8502,7 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 		status_print("²éÑ¯³Ö²ÖÊ§°Ü:%s", RspInfo.ErrorMsg);
 		return;
 	}
-	if(strlen(InvestorPosition.InstrumentID)>0)
+	if(strlen(InvestorPosition.InstrumentID)>0 && InvestorPosition.HedgeFlag == THOST_FTDC_HF_Speculation)
 		vInvestorPositions.push_back(InvestorPosition);
 	if(!bIsLast)
 		return;
@@ -8411,12 +8520,15 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 		for(iter=vPositions.begin();iter!=vPositions.end();iter++){
 			if(strcmp(iterInvestorPosition->InvestorID,iter->AccID)==0 && strcmp(iterInvestorPosition->InstrumentID,iter->InstrumentID)==0){
 				if(iterInvestorPosition->PosiDirection==THOST_FTDC_PD_Long){
+					iter->AvgBuyPrice = iterInvestorPosition->PreSettlementPrice;
 					iter->BuyVolume+=iterInvestorPosition->YdPosition;
 					iter->Volume+=iterInvestorPosition->YdPosition;
 				}else{
+					iter->AvgSellPrice = iterInvestorPosition->PreSettlementPrice;
 					iter->SellVolume+=iterInvestorPosition->YdPosition;
 					iter->Volume-=iterInvestorPosition->YdPosition;
 				}
+				iter->Price = iterInvestorPosition->PreSettlementPrice;
 				break;
 			}
 		}
@@ -8432,13 +8544,18 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 					break;
 				}
 			}
+
 			if(iterInvestorPosition->PosiDirection==THOST_FTDC_PD_Long){
+				Posi.AvgBuyPrice = iterInvestorPosition->PreSettlementPrice;
 				Posi.BuyVolume+=iterInvestorPosition->YdPosition;
 				Posi.Volume+=iterInvestorPosition->YdPosition;
 			}else{
+				Posi.AvgSellPrice = iterInvestorPosition->PreSettlementPrice;
 				Posi.SellVolume+=iterInvestorPosition->YdPosition;
 				Posi.Volume-=iterInvestorPosition->YdPosition;
 			}
+			Posi.Price = iterInvestorPosition->PreSettlementPrice;
+			mPositionIndex[Posi.InstrumentID] = vPositions.size();
 			vPositions.push_back(Posi);
 		}
 	}
@@ -8464,25 +8581,35 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 			if(strcmp(iterTrade->InvestorID,iter->AccID)==0 && strcmp(iter->InstrumentID,iterTrade->InstrumentID)==0){
 				if(iterTrade->Direction==THOST_FTDC_D_Buy){
 					if(iterTrade->OffsetFlag==THOST_FTDC_OF_Open){
+						iter->AvgBuyPrice = (iter->AvgBuyPrice * iter->BuyVolume + iterTrade->Price * iterTrade->Volume) / (iter->BuyVolume + iterTrade->Volume);
 						iter->BuyVolume+=iterTrade->Volume;
 						iter->TodayBuyVolume+=iterTrade->Volume;
 					}else{
 						if(iterTrade->OffsetFlag==THOST_FTDC_OF_CloseToday || (iter->SellVolume-iter->TodaySellVolume)==0)
 							iter->TodaySellVolume-=iterTrade->Volume;
 						iter->SellVolume-=iterTrade->Volume;
+						if (iter->SellVolume == 0)
+							iter->AvgSellPrice = 0;
 					}
 					iter->Volume+=iterTrade->Volume;
 				}else{
 					if(iterTrade->OffsetFlag==THOST_FTDC_OF_Open){
+						iter->AvgSellPrice = (iter->AvgSellPrice * iter->SellVolume + iterTrade->Price * iterTrade->Volume) / (iter->SellVolume + iterTrade->Volume);
 						iter->SellVolume+=iterTrade->Volume;
 						iter->TodaySellVolume+=iterTrade->Volume;
 					}else{
 						if(iterTrade->OffsetFlag==THOST_FTDC_OF_CloseToday || (iter->BuyVolume-iter->TodayBuyVolume)==0)
 							iter->TodayBuyVolume-=iterTrade->Volume;
 						iter->BuyVolume-=iterTrade->Volume;
+						if (iter->BuyVolume == 0)
+							iter->AvgBuyPrice = 0;
 					}
 					iter->Volume-=iterTrade->Volume;
 				}
+				if (iter->BuyVolume > iter->SellVolume)
+					iter->Price = iter->AvgBuyPrice;
+				else
+					iter->Price = iter->AvgSellPrice;
 				break;
 			}
 		}
@@ -8495,25 +8622,36 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 			strcpy(Posi.ExchangeID,iterTrade->ExchangeID);
 			if(iterTrade->Direction==THOST_FTDC_D_Buy){
 				if(iterTrade->OffsetFlag==THOST_FTDC_OF_Open){
+					Posi.AvgBuyPrice = (Posi.AvgBuyPrice * Posi.BuyVolume + iterTrade->Price * iterTrade->Volume) / (Posi.BuyVolume + iterTrade->Volume);
 					Posi.BuyVolume+=iterTrade->Volume;
 					Posi.TodayBuyVolume+=iterTrade->Volume;
 				}else{
 					if(iterTrade->OffsetFlag==THOST_FTDC_OF_CloseToday || (Posi.SellVolume-Posi.TodaySellVolume)==0)
 						Posi.TodaySellVolume-=iterTrade->Volume;
 					Posi.SellVolume-=iterTrade->Volume;
+					if(Posi.SellVolume == 0)
+						Posi.AvgSellPrice = 0;
 				}
 				Posi.Volume+=iterTrade->Volume;
 			}else{
 				if(iterTrade->OffsetFlag==THOST_FTDC_OF_Open){
+					Posi.AvgSellPrice = (Posi.AvgSellPrice * Posi.SellVolume + iterTrade->Price * iterTrade->Volume) / (Posi.SellVolume + iterTrade->Volume);
 					Posi.SellVolume+=iterTrade->Volume;
 					Posi.TodaySellVolume+=iterTrade->Volume;
 				}else{
 					if(iterTrade->OffsetFlag==THOST_FTDC_OF_CloseToday || (Posi.BuyVolume-Posi.TodayBuyVolume)==0)
 						Posi.TodayBuyVolume-=iterTrade->Volume;
 					Posi.BuyVolume-=iterTrade->Volume;
+					if (Posi.BuyVolume == 0)
+						Posi.AvgBuyPrice = 0;
 				}
 				Posi.Volume-=iterTrade->Volume;
 			}
+			if (Posi.BuyVolume > Posi.SellVolume)
+				Posi.Price = Posi.AvgBuyPrice;
+			else
+				Posi.Price = Posi.AvgSellPrice;
+			mPositionIndex[Posi.InstrumentID] = vPositions.size();
 			vPositions.push_back(Posi);
 		}
 	}
@@ -8611,6 +8749,7 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 						}
 						break;
 					}
+					mPositionIndex[Posi.InstrumentID] = vPositions.size();
 					vPositions.push_back(Posi);
 				}
 			}
@@ -8924,6 +9063,7 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 			auto& Posi = vPositions[iterIndex->second];
 			if (Trade.Direction == THOST_FTDC_D_Buy) {
 				if (Trade.OffsetFlag == THOST_FTDC_OF_Open) {
+					Posi.AvgBuyPrice = (Posi.AvgBuyPrice * Posi.BuyVolume + Trade.Price * Trade.Volume) / (Posi.BuyVolume + Trade.Volume);
 					Posi.BuyVolume += Trade.Volume;
 					Posi.TodayBuyVolume += Trade.Volume;
 				}
@@ -8931,11 +9071,14 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 					if (Trade.OffsetFlag == THOST_FTDC_OF_CloseToday || (Posi.SellVolume - Posi.TodaySellVolume) == 0)
 						Posi.TodaySellVolume -= Trade.Volume;
 					Posi.SellVolume -= Trade.Volume;
+					if(Posi.SellVolume==0)
+						Posi.AvgSellPrice = 0;
 				}
 				Posi.Volume += Trade.Volume;
 			}
 			else {
 				if (Trade.OffsetFlag == THOST_FTDC_OF_Open) {
+					Posi.AvgSellPrice = (Posi.AvgSellPrice * Posi.SellVolume + Trade.Price * Trade.Volume) / (Posi.SellVolume + Trade.Volume);
 					Posi.SellVolume += Trade.Volume;
 					Posi.TodaySellVolume += Trade.Volume;
 				}
@@ -8943,9 +9086,15 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 					if (Trade.OffsetFlag == THOST_FTDC_OF_CloseToday || (Posi.BuyVolume - Posi.TodayBuyVolume) == 0)
 						Posi.TodayBuyVolume -= Trade.Volume;
 					Posi.BuyVolume -= Trade.Volume;
+					if (Posi.BuyVolume == 0)
+						Posi.AvgBuyPrice = 0;
 				}
 				Posi.Volume -= Trade.Volume;
 			}
+			if (Posi.BuyVolume > Posi.SellVolume)
+				Posi.Price = Posi.AvgBuyPrice;
+			else
+				Posi.Price = Posi.AvgSellPrice;
 		} else {
 			stPosition_t Posi;
 			memset(&Posi,0x00,sizeof(Posi));
@@ -8957,23 +9106,33 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 				if(Trade.OffsetFlag==THOST_FTDC_OF_Open){
 					Posi.BuyVolume+=Trade.Volume;
 					Posi.TodayBuyVolume+=Trade.Volume;
+					Posi.AvgBuyPrice = Trade.Price;
 				}else{
 					if(Trade.OffsetFlag==THOST_FTDC_OF_CloseToday || (Posi.SellVolume-Posi.TodaySellVolume)==0)
 						Posi.TodaySellVolume-=Trade.Volume;
 					Posi.SellVolume-=Trade.Volume;
+					if (Posi.SellVolume == 0)
+						Posi.AvgSellPrice = 0;
 				}
 				Posi.Volume+=Trade.Volume;
 			}else{
 				if(Trade.OffsetFlag==THOST_FTDC_OF_Open){
 					Posi.SellVolume+=Trade.Volume;
 					Posi.TodaySellVolume+=Trade.Volume;
+					Posi.AvgSellPrice = Trade.Price;
 				}else{
 					if(Trade.OffsetFlag==THOST_FTDC_OF_CloseToday || (Posi.BuyVolume-Posi.TodayBuyVolume)==0)
 						Posi.TodayBuyVolume-=Trade.Volume;
 					Posi.BuyVolume-=Trade.Volume;
+					if (Posi.BuyVolume == 0)
+						Posi.AvgBuyPrice = 0;
 				}
 				Posi.Volume-=Trade.Volume;
 			}
+			if (Posi.BuyVolume > Posi.SellVolume)
+				Posi.Price = Posi.AvgBuyPrice;
+			else
+				Posi.Price = Posi.AvgSellPrice;
 			mPositionIndex[Posi.InstrumentID] = vPositions.size();
 			vPositions.push_back(Posi);
 		}
