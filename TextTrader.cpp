@@ -762,6 +762,19 @@ void HandleStatusClear()
 	seconds_delayed = 0;
 }
 
+void HandleQueryAccount()
+{
+	if (TradeConnectionStatus != CONNECTION_STATUS_LOGINOK)
+		return;
+
+	CThostFtdcQryTradingAccountField Req;
+
+	memset(&Req, 0x00, sizeof(Req));
+	strcpy(Req.BrokerID, pTradeRsp->broker);
+	strcpy(Req.InvestorID, pTradeRsp->user);
+	pTradeRsp->m_pTradeReq->ReqQryTradingAccount(&Req, 0);
+}
+
 void HandleTickTimeout()
 {
 	switch(working_window){
@@ -3117,6 +3130,7 @@ int OrderInsert(const char* InstrumentID,char BSFlag,char OCFlag,double Price,un
 			}
 			Posi.BuyingVolume+=Req.VolumeTotalOriginal;
 		}
+		mPositionIndex[Posi.InstrumentID] = vPositions.size();
 		vPositions.push_back(Posi);
 	}
 
@@ -5772,10 +5786,14 @@ void work_thread()
 
 void time_thread()
 {
+	size_t seconds = 0;
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::seconds(1));
+		seconds++;
 		if (seconds_delayed++ >= 3)
 			post_task(std::bind(HandleStatusClear));
+		if (seconds % 3 == 0)
+			post_task(std::bind(HandleQueryAccount));
 		post_task(std::bind(HandleTickTimeout));
 	}
 }
@@ -8611,15 +8629,7 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 		break;
 	}
 
-	// 持仓处理完毕,查询资金
-	CThostFtdcQryTradingAccountField Req;
-	int r=0;
-	
-	memset(&Req,0x00,sizeof(Req));
-	strcpy(Req.BrokerID,broker);
-	strcpy(Req.InvestorID,user);
-	while((r=m_pTradeReq->ReqQryTradingAccount(&Req,m_nTradeRequestID++))==-2 || r==-3)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	// 持仓处理完毕
 }
 
 void CTradeRsp::HandleRspQryTradingAccount(CThostFtdcTradingAccountField& TradingAccount, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
@@ -8628,7 +8638,7 @@ void CTradeRsp::HandleRspQryTradingAccount(CThostFtdcTradingAccountField& Tradin
 		status_print("查询资金失败:%s", RspInfo.ErrorMsg);
 		return;
 	}
-	status_print("查询资金成功.");
+	//status_print("查询资金成功.");
 
 	std::vector<stAccount_t>::iterator iter;
 	for(iter=vAccounts.begin();iter!=vAccounts.end();iter++){
