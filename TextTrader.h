@@ -100,19 +100,14 @@ public:
 	void HandleRspOrderInsert(CThostFtdcInputOrderField& InputOrder, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast);
 	void HandleRspOrderAction(CThostFtdcInputOrderActionField& InputOrderAction, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast);
 
-	int TradeFrontID;
-	int TradeSessionID;
-	int TradeOrderRef;
-	int m_nTradeRequestID;
+	int FrontID;
+	int SessionID;
+	int OrderRef;
 	CThostFtdcTraderApi *m_pTradeReq;
-	char name[100];
-	char user[30];
-	char passwd[30];
-	char broker[30];
-	char tradedate[20];
-	char tradetime[20];
-	char tradeserv[256];
-	char license[20];
+	TThostFtdcUserIDType UserID;
+	TThostFtdcPasswordType Password;
+	TThostFtdcBrokerIDType BrokerID;
+	TThostFtdcDateType TradingDay;
 	TThostFtdcProductInfoType	UserProductInfo;
 	TThostFtdcIPAddressType		ClientIPAddress;
 	TThostFtdcMacAddressType	MacAddress;
@@ -156,23 +151,16 @@ public:
 	void HandleRspUserLogout(CThostFtdcUserLogoutField& UserLogout,CThostFtdcRspInfoField& RspInfo,int nRequestID,bool bIsLast);
 	void HandleRtnDepthMarketData(CThostFtdcDepthMarketDataField& DepthMarketData);
 
-	int m_nMarketRequestID;
 	CThostFtdcMdApi *m_pMarketReq;
-	char name[100];
-	char user[30];
-	char passwd[30];
-	char broker[30];
-	char tradeserv[256];
-	char marketserv[256];
-	char license[20];
+	TThostFtdcUserIDType UserID;
+	TThostFtdcPasswordType Password;
+	TThostFtdcBrokerIDType BrokerID;
 };
 
 
 typedef struct {
-	char exchange_id[20];
-	char exchange_name[100];
-	char product_id[30];
-	char product_name[100];
+	TThostFtdcExchangeIDType ExchangeID;
+	TThostFtdcInstrumentIDType InstrumentID;
 	int trade_volume;
 	int precision;
 	bool subscribed;
@@ -182,10 +170,10 @@ typedef struct {
 } quotation_t;
 
 typedef struct {
-	char BrokerID[20];
-	char AccID[30];
-	char ExchangeID[20];
-	char InstrumentID[30];
+	TThostFtdcBrokerIDType BrokerID;
+	TThostFtdcInvestorIDType InvestorID;
+	TThostFtdcExchangeIDType ExchangeID;
+	TThostFtdcInstrumentIDType InstrumentID;
 	int Volume;
 	double Price;
 	double ProfitLoss;
@@ -207,22 +195,6 @@ typedef struct {
 	int SellingVolume;
 } stPosition_t;
 
-typedef struct {
-	char BrokerID[20];
-	char AccID[30];
-	char AccName[30];
-	double PreBalance;
-	double MoneyIn;
-	double MoneyOut;
-	double FrozenMargin;
-	double MoneyFrozen;
-	double FeeFrozen;
-	double Margin;
-	double Fee;
-	double CloseProfitLoss;
-	double FloatProfitLoss;
-	double BalanceAvailable;
-} stAccount_t;
 
 // Basic
 int subscribe(size_t index);
@@ -286,7 +258,7 @@ void order_display_status();
 void order_display_focus();
 void order_reset();
 void order_redraw();
-void order_display_quotation(const char *product_id);
+void order_display_quotation(const char *InstrumentID);
 int on_key_pressed_order(int ch);
 int goto_mainboard_window_from_order();
 int goto_orderlist_window_from_order();
@@ -342,7 +314,7 @@ void orderlist_display_orders();
 void orderlist_display_status();
 void orderlist_display_focus();
 void orderlist_redraw();
-void orderlist_reset(const char *user);
+void orderlist_reset(const char *UserID);
 void orderlist_display_order(int index);
 int on_key_pressed_orderlist(int ch);
 int goto_mainboard_window_from_orderlist();
@@ -375,7 +347,7 @@ void filllist_display_filledorders();
 void filllist_display_status();
 void filllist_display_focus();
 void filllist_redraw();
-void filllist_reset(const char *user);
+void filllist_reset(const char *UserID);
 void filllist_display_filledorder(int index);
 int on_key_pressed_filllist(int ch);
 int goto_mainboard_window_from_filllist();
@@ -405,7 +377,7 @@ void positionlist_display_positions();
 void positionlist_display_status();
 void positionlist_display_focus();
 void positionlist_redraw();
-void positionlist_reset(const char *user);
+void positionlist_reset(const char *UserID);
 void positionlist_display_position(const char* szAccID, const char* szExchangeID, const char* szInstrumentID);
 int on_key_pressed_positionlist(int ch);
 int goto_mainboard_window_from_positionlist();
@@ -436,7 +408,7 @@ void acclist_display_accs();
 void acclist_display_status();
 void acclist_display_focus();
 void acclist_redraw();
-void acclist_reset(const char *user);
+void acclist_reset(const char *UserID);
 void acclist_display_acc(const char *szBrokerID,const char *szAccID);
 int on_key_pressed_acclist(int ch);
 int goto_mainboard_window_from_acclist();
@@ -464,7 +436,7 @@ int acclist_goto_order_window();
 void column_settings_refresh_screen();
 void column_settings_display_title();
 void column_settings_display_status();
-void display_column(const char *product_id);
+void display_column(const char *InstrumentID);
 int on_key_pressed_column_settings(int ch);
 int column_settings_select_column();
 int column_settings_move_forward_1_line();

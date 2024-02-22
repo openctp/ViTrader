@@ -91,7 +91,6 @@ void post_task(std::function<void()> task);
 
 int apierrorcount=sizeof(apierrorarray)/sizeof(apierror_t);
 char apierror_none[100]="";
-char tradedate[20];
 char tradetime[20];
 char status_message[100];
 
@@ -103,7 +102,7 @@ std::vector<CThostFtdcOrderField> vOrders;
 std::vector<CThostFtdcTradeField> vFilledOrders;
 std::vector<stPosition_t> vPositions;
 std::map<std::string, size_t> mPositionIndex;
-std::vector<stAccount_t> vAccounts;
+std::vector<CThostFtdcTradingAccountField> vAccounts;
 std::vector<CThostFtdcInputOrderField> vInputingOrders;
 std::vector<CThostFtdcInputOrderActionField> vCancelingOrders;
 
@@ -406,7 +405,7 @@ void status_print(const char* fmt, ...)
 
 int main(int argc,char *argv[])
 {
-	std::string market_serv_addr, trade_serv_addr, broker, UserProductInfo, AuthCode, AppID, user, password, market_user, market_password;
+	std::string market_serv_addr, trade_serv_addr, BrokerID, UserProductInfo, AuthCode, AppID, UserID, password, market_user, market_password;
 	std::string trade_name_server,market_name_server;
 	std::string ClientIPAddress,MacAddress,LoginRemark;
 
@@ -419,16 +418,16 @@ int main(int argc,char *argv[])
 	}
 	market_serv_addr = reader.Get("market", "address", "");
 	trade_serv_addr = reader.Get("trade", "address", "");
-	broker = reader.Get("trade", "broker", "");
+	BrokerID = reader.Get("trade", "broker", "");
 	UserProductInfo = reader.Get("trade", "UserProductInfo", "");
 	AuthCode = reader.Get("trade", "AuthCode", "");
 	AppID = reader.Get("trade", "AppID", "");
-	user = reader.Get("trade", "user", "");
+	UserID = reader.Get("trade", "user", "");
 	password = reader.Get("trade", "password", "");
 	ClientIPAddress = reader.Get("trade", "ClientIPAddress", "");
 	MacAddress = reader.Get("trade", "MacAddress", "");
 	LoginRemark = reader.Get("trade", "LoginRemark", "");
-	market_user = reader.Get("market", "user", "");
+	market_user = reader.Get("market", "UserID", "");
 	market_password = reader.Get("market", "password", "");
 	trade_name_server = reader.Get("trade", "NameServer", "");
 	market_name_server = reader.Get("market", "NameServer", "");
@@ -436,34 +435,33 @@ int main(int argc,char *argv[])
 	int ch;
 	char user_trade_flow_path[256],user_market_flow_path[256];
 
-	// get user/password from terminal
-	if (user == "") {
+	// get UserID/password from terminal
+	if (UserID == "") {
 		std::cout << "UserID:";
-		std::cin >> user;
+		std::cin >> UserID;
 		std::cout << "Password:";
 		std::cin >> password;
 	}
 
 	// If no special market password then use trade's.
 	if (market_user == "")
-		market_user = user;
+		market_user = UserID;
 	if (market_password == "")
 		market_password = password;
 
 	// Market	
 	pMarketRsp=new CMarketRsp();
-	strcpy(pMarketRsp->marketserv, market_serv_addr.c_str());
 	sprintf(user_market_flow_path,"market");
-	strcpy(pMarketRsp->broker, broker.c_str());
-	strcpy(pMarketRsp->user, market_user.c_str());
-	strcpy(pMarketRsp->passwd, market_password.c_str());
+	strcpy(pMarketRsp->BrokerID, BrokerID.c_str());
+	strcpy(pMarketRsp->UserID, market_user.c_str());
+	strcpy(pMarketRsp->Password, market_password.c_str());
 	pMarketRsp->m_pMarketReq=CThostFtdcMdApi::CreateFtdcMdApi(user_market_flow_path);
 	pMarketRsp->m_pMarketReq->RegisterSpi(pMarketRsp);
 	if(market_name_server.length()){
 		CThostFtdcFensUserInfoField FensUserInfo;
 		memset(&FensUserInfo,0x00,sizeof(FensUserInfo));
-		strncpy(FensUserInfo.BrokerID,broker.c_str(),sizeof(FensUserInfo.BrokerID)-1);
-		strncpy(FensUserInfo.UserID,broker.c_str(),sizeof(FensUserInfo.UserID)-1);
+		strncpy(FensUserInfo.BrokerID,BrokerID.c_str(),sizeof(FensUserInfo.BrokerID)-1);
+		strncpy(FensUserInfo.UserID,BrokerID.c_str(),sizeof(FensUserInfo.UserID)-1);
 		FensUserInfo.LoginMode = THOST_FTDC_LM_Trade;
 		pMarketRsp->m_pMarketReq->RegisterFensUserInfo(&FensUserInfo);
 		pMarketRsp->m_pMarketReq->RegisterNameServer((char*)market_name_server.c_str());
@@ -474,34 +472,31 @@ int main(int argc,char *argv[])
 
 
 	// Trade
-	stAccount_t Account;
+	CThostFtdcTradingAccountField Account;
 	memset(&Account,0x00,sizeof(Account));
-	strcpy(Account.AccName, user.c_str());
-	strcpy(Account.BrokerID, broker.c_str());
-	strcpy(Account.AccID, user.c_str());
+	strcpy(Account.BrokerID, BrokerID.c_str());
+	strcpy(Account.AccountID, UserID.c_str());
 	vAccounts.push_back(Account);
 
 	pTradeRsp=new CTradeRsp();
-	strcpy(pTradeRsp->broker, broker.c_str());
-	strcpy(pTradeRsp->user, user.c_str());
-	strcpy(pTradeRsp->passwd, password.c_str());
+	strcpy(pTradeRsp->BrokerID, BrokerID.c_str());
+	strcpy(pTradeRsp->UserID, UserID.c_str());
+	strcpy(pTradeRsp->Password, password.c_str());
 	strcpy(pTradeRsp->UserProductInfo,UserProductInfo.c_str());
 	strcpy(pTradeRsp->ClientIPAddress,ClientIPAddress.c_str());
 	strcpy(pTradeRsp->MacAddress,MacAddress.c_str());
 	strcpy(pTradeRsp->LoginRemark,LoginRemark.c_str());
 	strcpy(pTradeRsp->AppID,AppID.c_str());
 	strcpy(pTradeRsp->AuthCode,AuthCode.c_str());
-	strcpy(pTradeRsp->name, user.c_str());
-	strcpy(pTradeRsp->tradeserv, trade_serv_addr.c_str());
-	strcpy(order_curr_accname, pTradeRsp->name);
-	sprintf(user_trade_flow_path,"%s_%s_trade", broker.c_str(), user.c_str());
+	strcpy(order_curr_accname, UserID.c_str());
+	sprintf(user_trade_flow_path,"%s_%s_trade", BrokerID.c_str(), UserID.c_str());
 	pTradeRsp->m_pTradeReq=CThostFtdcTraderApi::CreateFtdcTraderApi(user_trade_flow_path);
 	pTradeRsp->m_pTradeReq->RegisterSpi(pTradeRsp);
 	if(trade_name_server.length()){
 		CThostFtdcFensUserInfoField FensUserInfo;
 		memset(&FensUserInfo,0x00,sizeof(FensUserInfo));
-		strncpy(FensUserInfo.BrokerID,broker.c_str(),sizeof(FensUserInfo.BrokerID)-1);
-		strncpy(FensUserInfo.UserID,user.c_str(),sizeof(FensUserInfo.UserID)-1);
+		strncpy(FensUserInfo.BrokerID,BrokerID.c_str(),sizeof(FensUserInfo.BrokerID)-1);
+		strncpy(FensUserInfo.UserID,UserID.c_str(),sizeof(FensUserInfo.UserID)-1);
 		FensUserInfo.LoginMode = THOST_FTDC_LM_Trade;
 		pTradeRsp->m_pTradeReq->RegisterFensUserInfo(&FensUserInfo);
 		pTradeRsp->m_pTradeReq->RegisterNameServer((char*)trade_name_server.c_str());
@@ -791,7 +786,7 @@ double GetBuyProfitLoss(const char* InstrumentID)
 
 	std::vector<stPosition_t>::iterator iter;
 	for (iter = vPositions.begin(); iter != vPositions.end(); iter++) {
-		if (strcmp(iter->AccID, order_curr_accname) == 0 && strcmp(iter->InstrumentID, vquotes[i].product_id) == 0)
+		if (strcmp(iter->InvestorID, order_curr_accname) == 0 && strcmp(iter->InstrumentID, vquotes[i].InstrumentID) == 0)
 			break;
 	}
 	if (iter != vPositions.end()) {
@@ -839,7 +834,7 @@ double GetSellProfitLoss(const char* InstrumentID)
 
 	std::vector<stPosition_t>::iterator iter;
 	for (iter = vPositions.begin(); iter != vPositions.end(); iter++) {
-		if (strcmp(iter->AccID, order_curr_accname) == 0 && strcmp(iter->InstrumentID, vquotes[i].product_id) == 0)
+		if (strcmp(iter->InvestorID, order_curr_accname) == 0 && strcmp(iter->InstrumentID, vquotes[i].InstrumentID) == 0)
 			break;
 	}
 	if (iter != vPositions.end()) {
@@ -871,8 +866,8 @@ void HandleQueryAccount()
 	CThostFtdcQryTradingAccountField Req;
 
 	memset(&Req, 0x00, sizeof(Req));
-	strcpy(Req.BrokerID, pTradeRsp->broker);
-	strcpy(Req.InvestorID, pTradeRsp->user);
+	strcpy(Req.BrokerID, pTradeRsp->BrokerID);
+	strcpy(Req.InvestorID, pTradeRsp->UserID);
 	pTradeRsp->m_pTradeReq->ReqQryTradingAccount(&Req, 0);
 }
 
@@ -928,7 +923,7 @@ int goto_symbol_window_from_mainboard()
 		mvchgat(curr_line,0,-1,A_REVERSE,0,NULL);
 		return 0;
 	}
-	strcpy(symbol_curr_product_id,vquotes[curr_pos+curr_line-1].product_id);
+	strcpy(symbol_curr_product_id,vquotes[curr_pos+curr_line-1].InstrumentID);
 	working_window=WIN_SYMBOL;
 	symbol_refresh_screen();
 	unsubscribe(UINT_MAX);
@@ -1334,14 +1329,10 @@ void focus_quotation(int index)
 
 CTradeRsp::CTradeRsp()
 {
-	memset(name, 0x00, sizeof(name));
-	memset(user, 0x00, sizeof(user));
-	memset(passwd, 0x00, sizeof(passwd));
-	memset(broker, 0x00, sizeof(broker));
-	memset(tradedate, 0x00, sizeof(tradedate));
-	memset(tradetime, 0x00, sizeof(tradetime));
-	memset(tradeserv, 0x00, sizeof(tradeserv));
-	memset(license, 0x00, sizeof(license));
+	memset(UserID, 0x00, sizeof(UserID));
+	memset(Password, 0x00, sizeof(Password));
+	memset(BrokerID, 0x00, sizeof(BrokerID));
+	memset(TradingDay, 0x00, sizeof(TradingDay));
 }
 CTradeRsp::~CTradeRsp()
 {
@@ -1558,16 +1549,9 @@ void CTradeRsp::OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CT
 //Quot
 CMarketRsp::CMarketRsp()
 {
-	memset(name, 0x00, sizeof(name));
-	memset(user, 0x00, sizeof(user));
-	memset(passwd, 0x00, sizeof(passwd));
-	memset(broker, 0x00, sizeof(broker));
-	memset(tradedate, 0x00, sizeof(tradedate));
-	memset(tradetime, 0x00, sizeof(tradetime));
-	memset(tradeserv, 0x00, sizeof(tradeserv));
-	memset(marketserv, 0x00, sizeof(marketserv));
-	memset(license, 0x00, sizeof(license));
-
+	memset(UserID, 0x00, sizeof(UserID));
+	memset(Password, 0x00, sizeof(Password));
+	memset(BrokerID, 0x00, sizeof(BrokerID));
 }
 CMarketRsp::~CMarketRsp()
 {
@@ -1632,12 +1616,12 @@ void display_quotation(size_t index)
 		if(maxx-x<column_items[*iter].width)
 			break;
 		switch(*iter){
-		case COL_SYMBOL:		//product_id
-			mvprintw(y,x,"%-*s",column_items[COL_SYMBOL].width,vquotes[i].product_id);
+		case COL_SYMBOL:		//InstrumentID
+			mvprintw(y,x,"%-*s",column_items[COL_SYMBOL].width,vquotes[i].InstrumentID);
 			x+=column_items[COL_SYMBOL].width;
 			break;
-		case COL_SYMBOL_NAME:		//product_name
-			mvprintw(y,x,"%-*s",column_items[COL_SYMBOL_NAME].width,vquotes[i].product_name);
+		case COL_SYMBOL_NAME:		//Instrument.InstrumentName
+			mvprintw(y,x,"%-*s",column_items[COL_SYMBOL_NAME].width,vquotes[i].Instrument.InstrumentName);
 			x+=column_items[COL_SYMBOL_NAME].width+1;
 			break;
 		case COL_CLOSE:
@@ -1790,9 +1774,9 @@ void display_quotation(size_t index)
 	}
 }
 
-void order_display_quotation(const char *product_id)
+void order_display_quotation(const char *InstrumentID)
 {
-	if(strcmp(vquotes[order_symbol_index].product_id,product_id)!=0)
+	if(strcmp(vquotes[order_symbol_index].InstrumentID,InstrumentID)!=0)
 		return;
 	order_redraw();
 	if(order_corner_win){
@@ -1887,7 +1871,7 @@ void display_status()
 	
 	mvprintw(y-1,0,"[%d/%d]",curr_pos+curr_line,vquotes.size());
 	mvprintw(y - 1, 15, "%s", status_message);
-	mvprintw(y-1,x-25,"%s %s",pTradeRsp->user,tradetime);
+	mvprintw(y-1,x-25,"%s %s",pTradeRsp->UserID,tradetime);
 }
 void order_display_status()
 {
@@ -1980,7 +1964,7 @@ void order_display_status()
 	//std::vector<CThostFtdcOrderField>::iterator iterOrder;
 	//std::vector<CThostFtdcInputOrderActionField>::iterator iterCanceling;
 	//for(iterOrder=vOrders.begin();iterOrder!=vOrders.end();iterOrder++){
-	//	if(strcmp(iterOrder->InvestorID,order_curr_accname)!=0 || strcmp(iterOrder->InstrumentID,vquotes[order_symbol_index].product_id)!=0 || iterOrder->OrderStatus==THOST_FTDC_OST_AllTraded || iterOrder->OrderStatus==THOST_FTDC_OST_Canceled)
+	//	if(strcmp(iterOrder->InvestorID,order_curr_accname)!=0 || strcmp(iterOrder->InstrumentID,vquotes[order_symbol_index].InstrumentID)!=0 || iterOrder->OrderStatus==THOST_FTDC_OST_AllTraded || iterOrder->OrderStatus==THOST_FTDC_OST_Canceled)
 	//		continue;
 	//	if(iterOrder->OrderStatus==THOST_FTDC_OST_NoTradeQueueing || iterOrder->OrderStatus==THOST_FTDC_OST_PartTradedNotQueueing){
 	//		if(iterOrder->Direction==THOST_FTDC_D_Buy)
@@ -2048,7 +2032,7 @@ void order_display_status()
 	move(y - 1, 0);
 	clrtoeol();
 	mvprintw(y - 1, 15, "%s", status_message);
-	mvprintw(y - 1, x - 25, "%s %s", pTradeRsp->user, tradetime);
+	mvprintw(y - 1, x - 25, "%s %s", pTradeRsp->UserID, tradetime);
 	//mvprintw(y-1,x-25,"%s,%s",strbuyorders,strsellorders);
 }
 void column_settings_display_status()
@@ -2103,7 +2087,7 @@ void column_settings_display_status()
 	move(y-1,0);
 	clrtoeol();
 	
-	mvprintw(y-1,x-25,"%s %s", pTradeRsp->user,tradetime);
+	mvprintw(y-1,x-25,"%s %s", pTradeRsp->UserID,tradetime);
 }
 void symbol_display_status()
 {
@@ -2157,7 +2141,7 @@ void symbol_display_status()
 	move(y-1,0);
 	clrtoeol();
 	
-	mvprintw(y-1,x-25,"%s %s", pTradeRsp->user,tradetime);
+	mvprintw(y-1,x-25,"%s %s", pTradeRsp->UserID,tradetime);
 }
 
 void init_screen()
@@ -2666,7 +2650,7 @@ void order_display_orders_at_price(double price)
 	std::vector<CThostFtdcOrderField>::iterator iter;
 	std::vector<CThostFtdcInputOrderActionField>::iterator iterCanceling;
 	for(iter=vOrders.begin();iter!=vOrders.end();iter++){
-		if(strcmp(iter->InvestorID,order_curr_accname)!=0 ||strcmp(iter->InstrumentID,vquotes[order_symbol_index].product_id)!=0 || iter->OrderStatus==THOST_FTDC_OST_AllTraded || iter->OrderStatus==THOST_FTDC_OST_Canceled)
+		if(strcmp(iter->InvestorID,order_curr_accname)!=0 ||strcmp(iter->InstrumentID,vquotes[order_symbol_index].InstrumentID)!=0 || iter->OrderStatus==THOST_FTDC_OST_AllTraded || iter->OrderStatus==THOST_FTDC_OST_Canceled)
 			continue;
 		if(fabs(iter->LimitPrice-price)<error_amount){
 			if(iter->OrderStatus==THOST_FTDC_OST_NoTradeQueueing || iter->OrderStatus== THOST_FTDC_OST_PartTradedQueueing){
@@ -2909,7 +2893,7 @@ void order_move_complete()
 	std::vector<CThostFtdcOrderField>::iterator iter;
 	std::vector<CThostFtdcInputOrderActionField>::iterator iterCanceling;
 	for(iter=vOrders.begin();iter!=vOrders.end();iter++){
-		if(strcmp(iter->InvestorID,pTradeRsp->user)!=0 || strcmp(iter->InstrumentID,vquotes[order_symbol_index].product_id)!=0 || iter->OrderStatus==THOST_FTDC_OST_AllTraded || iter->OrderStatus==THOST_FTDC_OST_Canceled)
+		if(strcmp(iter->InvestorID,pTradeRsp->UserID)!=0 || strcmp(iter->InstrumentID,vquotes[order_symbol_index].InstrumentID)!=0 || iter->OrderStatus==THOST_FTDC_OST_AllTraded || iter->OrderStatus==THOST_FTDC_OST_Canceled)
 			continue;
 		for(iterCanceling=vCancelingOrders.begin();iterCanceling!=vCancelingOrders.end();iterCanceling++){
 			if(strcmp(iterCanceling->InstrumentID,iter->InstrumentID)==0 && iterCanceling->FrontID==iter->FrontID && iterCanceling->SessionID==iter->SessionID && strcmp(iterCanceling->OrderRef,iter->OrderRef)==0)
@@ -2929,7 +2913,7 @@ void order_move_complete()
 			strncpy(Req.ExchangeID,iter->ExchangeID,sizeof(Req.ExchangeID)-1);
 			strcpy(Req.InstrumentID,iter->InstrumentID);
 			strcpy(Req.OrderRef,iter->OrderRef);
-			Req.OrderActionRef=pTradeRsp->TradeOrderRef++;
+			Req.OrderActionRef=pTradeRsp->OrderRef++;
 			Req.FrontID=iter->FrontID;
 			Req.SessionID=iter->SessionID;
 			strcpy(Req.OrderSysID,iter->OrderSysID);
@@ -3009,19 +2993,19 @@ void order_buy_at_limit_price(double price,unsigned int n)
 	unsigned int nClose=0;
 	unsigned int nCloseToday=0;
 
-	getOrderOffsetFlag(vquotes[order_symbol_index].product_id,THOST_FTDC_D_Buy,n,nOpen,nClose,nCloseToday); // 自动开平
+	getOrderOffsetFlag(vquotes[order_symbol_index].InstrumentID,THOST_FTDC_D_Buy,n,nOpen,nClose,nCloseToday); // 自动开平
 	// 报单顺序依次为：平今、平仓、开仓
 	if(nCloseToday){
 		// 平今
-		OrderInsert(vquotes[order_symbol_index].product_id,THOST_FTDC_D_Buy,THOST_FTDC_OF_CloseToday,price,nCloseToday);
+		OrderInsert(vquotes[order_symbol_index].InstrumentID,THOST_FTDC_D_Buy,THOST_FTDC_OF_CloseToday,price,nCloseToday);
 	}
 	if(nClose){
 		// 平仓
-		OrderInsert(vquotes[order_symbol_index].product_id,THOST_FTDC_D_Buy,THOST_FTDC_OF_Close,price,nClose);
+		OrderInsert(vquotes[order_symbol_index].InstrumentID,THOST_FTDC_D_Buy,THOST_FTDC_OF_Close,price,nClose);
 	}
 	if(nOpen){
 		// 开仓
-		OrderInsert(vquotes[order_symbol_index].product_id,THOST_FTDC_D_Buy,THOST_FTDC_OF_Open,price,nOpen);
+		OrderInsert(vquotes[order_symbol_index].InstrumentID,THOST_FTDC_D_Buy,THOST_FTDC_OF_Open,price,nOpen);
 	}
 
 // 	vInputingOrders.push_back(Req);
@@ -3037,7 +3021,7 @@ void order_revert_at_limit()
 
 	std::vector<stPosition_t>::iterator iter;
 	for(iter=vPositions.begin();iter!=vPositions.end();iter++){
-		if(strcmp(iter->AccID,order_curr_accname)==0 && strcmp(iter->InstrumentID,vquotes[order_symbol_index].product_id)==0)
+		if(strcmp(iter->InvestorID,order_curr_accname)==0 && strcmp(iter->InstrumentID,vquotes[order_symbol_index].InstrumentID)==0)
 			break;
 	}
 	if(iter!=vPositions.end()){
@@ -3065,7 +3049,7 @@ void order_revert_at_market()
 
 	std::vector<stPosition_t>::iterator iter;
 	for(iter=vPositions.begin();iter!=vPositions.end();iter++){
-		if(strcmp(iter->AccID,order_curr_accname)==0 && strcmp(iter->InstrumentID,vquotes[order_symbol_index].product_id)==0)
+		if(strcmp(iter->InvestorID,order_curr_accname)==0 && strcmp(iter->InstrumentID,vquotes[order_symbol_index].InstrumentID)==0)
 			break;
 	}
 	if(iter!=vPositions.end()){
@@ -3105,19 +3089,19 @@ void order_sell_at_limit_price(double price,unsigned int n)
 	unsigned int nClose=0;
 	unsigned int nCloseToday=0;
 
-	getOrderOffsetFlag(vquotes[order_symbol_index].product_id,THOST_FTDC_D_Sell,n,nOpen,nClose,nCloseToday); // 自动开平
+	getOrderOffsetFlag(vquotes[order_symbol_index].InstrumentID,THOST_FTDC_D_Sell,n,nOpen,nClose,nCloseToday); // 自动开平
 	// 报单顺序依次为：平今、平仓、开仓
 	if(nCloseToday){
 		// 平今
-		OrderInsert(vquotes[order_symbol_index].product_id,THOST_FTDC_D_Sell,THOST_FTDC_OF_CloseToday,price,nCloseToday);
+		OrderInsert(vquotes[order_symbol_index].InstrumentID,THOST_FTDC_D_Sell,THOST_FTDC_OF_CloseToday,price,nCloseToday);
 	}
 	if(nClose){
 		// 平仓
-		OrderInsert(vquotes[order_symbol_index].product_id,THOST_FTDC_D_Sell,THOST_FTDC_OF_Close,price,nClose);
+		OrderInsert(vquotes[order_symbol_index].InstrumentID,THOST_FTDC_D_Sell,THOST_FTDC_OF_Close,price,nClose);
 	}
 	if(nOpen){
 		// 开仓
-		OrderInsert(vquotes[order_symbol_index].product_id,THOST_FTDC_D_Sell,THOST_FTDC_OF_Open,price,nOpen);
+		OrderInsert(vquotes[order_symbol_index].InstrumentID,THOST_FTDC_D_Sell,THOST_FTDC_OF_Open,price,nOpen);
 	}
 
 // 	vInputingOrders.push_back(Req);
@@ -3130,7 +3114,7 @@ int OrderInsert(const char* InstrumentID,char BSFlag,char OCFlag,double Price,un
 
 	std::vector<quotation_t>::iterator iter_quot;
 	for(iter_quot=vquotes.begin();iter_quot!=vquotes.end();iter_quot++){
-		if(strcmp(iter_quot->product_id,InstrumentID)==0)
+		if(strcmp(iter_quot->InstrumentID,InstrumentID)==0)
 			break;
 	}
 	if(iter_quot==vquotes.end())
@@ -3139,18 +3123,18 @@ int OrderInsert(const char* InstrumentID,char BSFlag,char OCFlag,double Price,un
 	CThostFtdcInputOrderField Req;
 			
 	memset(&Req,0x00,sizeof(Req));
-	strncpy(Req.BrokerID,pTradeRsp->broker,sizeof(Req.BrokerID)-1);
-	strncpy(Req.UserID, pTradeRsp->user, sizeof(Req.UserID) - 1);
-	strncpy(Req.InvestorID,pTradeRsp->user,sizeof(Req.InvestorID)-1);
+	strncpy(Req.BrokerID,pTradeRsp->BrokerID,sizeof(Req.BrokerID)-1);
+	strncpy(Req.UserID, pTradeRsp->UserID, sizeof(Req.UserID) - 1);
+	strncpy(Req.InvestorID,pTradeRsp->UserID,sizeof(Req.InvestorID)-1);
 	strcpy(Req.InstrumentID,InstrumentID);
-	strcpy(Req.ExchangeID, iter_quot->exchange_id);
+	strcpy(Req.ExchangeID, iter_quot->ExchangeID);
 	Req.Direction=BSFlag;
 	Req.CombOffsetFlag[0]=OCFlag;
 	Req.CombHedgeFlag[0]=THOST_FTDC_HF_Speculation;
 	Req.VolumeTotalOriginal=Qty;
 	Req.LimitPrice=Price;
 	Req.OrderPriceType=THOST_FTDC_OPT_LimitPrice;
-	sprintf(Req.OrderRef,"%d",pTradeRsp->TradeOrderRef++);
+	sprintf(Req.OrderRef,"%d",pTradeRsp->OrderRef++);
 	Req.TimeCondition=THOST_FTDC_TC_GFD;
 	if(Req.OrderPriceType==THOST_FTDC_OPT_AnyPrice)
 		Req.TimeCondition=THOST_FTDC_TC_IOC;
@@ -3160,7 +3144,7 @@ int OrderInsert(const char* InstrumentID,char BSFlag,char OCFlag,double Price,un
 	Req.ForceCloseReason=THOST_FTDC_FCC_NotForceClose;
 	Req.IsAutoSuspend=0;
 	Req.UserForceClose=0;
-	if(pTradeReq->ReqOrderInsert(&Req,pTradeRsp->m_nTradeRequestID++)<0)
+	if(pTradeReq->ReqOrderInsert(&Req,0)<0)
 		return -1;
 
 	CThostFtdcOrderField Order;
@@ -3168,9 +3152,9 @@ int OrderInsert(const char* InstrumentID,char BSFlag,char OCFlag,double Price,un
 	strcpy(Order.InstrumentID,Req.InstrumentID);
 	strcpy(Order.BrokerID,Req.BrokerID);
 	strcpy(Order.InvestorID,Req.InvestorID);
-	strcpy(Order.ExchangeID,iter_quot->exchange_id);
-	Order.FrontID=pTradeRsp->TradeFrontID;
-	Order.SessionID=pTradeRsp->TradeSessionID;
+	strcpy(Order.ExchangeID,iter_quot->ExchangeID);
+	Order.FrontID=pTradeRsp->FrontID;
+	Order.SessionID=pTradeRsp->SessionID;
 	strcpy(Order.OrderRef,Req.OrderRef);
 	Order.Direction=Req.Direction;
 	Order.CombHedgeFlag[0]=Req.CombHedgeFlag[0];
@@ -3190,7 +3174,7 @@ int OrderInsert(const char* InstrumentID,char BSFlag,char OCFlag,double Price,un
 
 	std::vector<stPosition_t>::iterator iter;
 	for(iter=vPositions.begin();iter!=vPositions.end();iter++){
-		if(strcmp(iter->AccID,Req.InvestorID)==0 && strcmp(iter->InstrumentID,Req.InstrumentID)==0){
+		if(strcmp(iter->InvestorID,Req.InvestorID)==0 && strcmp(iter->InstrumentID,Req.InstrumentID)==0){
 			if(Req.Direction==THOST_FTDC_D_Sell){
 				if(Req.CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
 					if(Req.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (iter->BuyVolume-iter->TodayBuyVolume)==0)
@@ -3214,8 +3198,8 @@ int OrderInsert(const char* InstrumentID,char BSFlag,char OCFlag,double Price,un
 		memset(&Posi,0x00,sizeof(Posi));
 		strcpy(Posi.InstrumentID,Req.InstrumentID);
 		strcpy(Posi.BrokerID,Req.BrokerID);
-		strcpy(Posi.AccID,Req.InvestorID);
-		strcpy(Posi.ExchangeID,iter_quot->exchange_id);
+		strcpy(Posi.InvestorID,Req.InvestorID);
+		strcpy(Posi.ExchangeID,iter_quot->ExchangeID);
 		if(Req.Direction==THOST_FTDC_D_Sell){
 			if(Req.CombOffsetFlag[0]!=THOST_FTDC_OF_Open){
 				if(Req.CombOffsetFlag[0]==THOST_FTDC_OF_CloseToday || (Posi.BuyVolume-Posi.TodayBuyVolume)==0)
@@ -3260,7 +3244,7 @@ void order_cancel_orders_at_price(double price)
 	std::vector<CThostFtdcOrderField>::iterator iter;
 	std::vector<CThostFtdcInputOrderActionField>::iterator iterCanceling;
 	for(iter=vOrders.begin();iter!=vOrders.end();iter++){
-		if(strcmp(iter->InvestorID,order_curr_accname)!=0 || strcmp(iter->InstrumentID,vquotes[order_symbol_index].product_id)!=0 || iter->OrderStatus==THOST_FTDC_OST_AllTraded || iter->OrderStatus==THOST_FTDC_OST_Canceled)
+		if(strcmp(iter->InvestorID,order_curr_accname)!=0 || strcmp(iter->InstrumentID,vquotes[order_symbol_index].InstrumentID)!=0 || iter->OrderStatus==THOST_FTDC_OST_AllTraded || iter->OrderStatus==THOST_FTDC_OST_Canceled)
 			continue;
 		if((order_curr_col==0 && iter->Direction!=THOST_FTDC_D_Buy) || (order_curr_col==1 && iter->Direction!=THOST_FTDC_D_Sell))
 			continue;
@@ -3281,13 +3265,13 @@ void order_cancel_orders_at_price(double price)
 			strcpy(Req.ExchangeID,iter->ExchangeID);
 			strcpy(Req.InstrumentID,iter->InstrumentID);
 			strcpy(Req.OrderRef,iter->OrderRef);
-			Req.OrderActionRef=pTradeRsp->TradeOrderRef++;
+			Req.OrderActionRef=pTradeRsp->OrderRef++;
 			Req.FrontID=iter->FrontID;
 			Req.SessionID=iter->SessionID;
 			strcpy(Req.OrderSysID,iter->OrderSysID);
 			Req.ActionFlag=THOST_FTDC_AF_Delete;
 			
-			if(pTradeRsp->m_pTradeReq->ReqOrderAction(&Req,pTradeRsp->m_nTradeRequestID++)<0)
+			if(pTradeRsp->m_pTradeReq->ReqOrderAction(&Req,0)<0)
 				break;
 			vCancelingOrders.push_back(Req);
 		}
@@ -3307,7 +3291,7 @@ void order_cancel_all_orders()
 	std::vector<CThostFtdcOrderField>::iterator iter;
 	std::vector<CThostFtdcInputOrderActionField>::iterator iterCanceling;
 	for(iter=vOrders.begin();iter!=vOrders.end();iter++){
-		if(strcmp(iter->InvestorID,order_curr_accname)!=0 || strcmp(iter->InstrumentID,vquotes[order_symbol_index].product_id)!=0 || iter->OrderStatus==THOST_FTDC_OST_AllTraded || iter->OrderStatus==THOST_FTDC_OST_Canceled)
+		if(strcmp(iter->InvestorID,order_curr_accname)!=0 || strcmp(iter->InstrumentID,vquotes[order_symbol_index].InstrumentID)!=0 || iter->OrderStatus==THOST_FTDC_OST_AllTraded || iter->OrderStatus==THOST_FTDC_OST_Canceled)
 			continue;
 		for(iterCanceling=vCancelingOrders.begin();iterCanceling!=vCancelingOrders.end();iterCanceling++){
 			if(strcmp(iterCanceling->InstrumentID,iter->InstrumentID)==0 && iterCanceling->FrontID==iter->FrontID && iterCanceling->SessionID==iter->SessionID && strcmp(iterCanceling->OrderRef,iter->OrderRef)==0)
@@ -3324,13 +3308,13 @@ void order_cancel_all_orders()
 		strcpy(Req.ExchangeID,iter->ExchangeID);
 		strcpy(Req.InstrumentID,iter->InstrumentID);
 		strcpy(Req.OrderRef,iter->OrderRef);
-		Req.OrderActionRef=pTradeRsp->TradeOrderRef++;
+		Req.OrderActionRef=pTradeRsp->OrderRef++;
 		Req.FrontID=iter->FrontID;
 		Req.SessionID=iter->SessionID;
 		strcpy(Req.OrderSysID,iter->OrderSysID);
 		Req.ActionFlag=THOST_FTDC_AF_Delete;
 		
-		if(pTradeRsp->m_pTradeReq->ReqOrderAction(&Req,pTradeRsp->m_nTradeRequestID++)<0)
+		if(pTradeRsp->m_pTradeReq->ReqOrderAction(&Req,0)<0)
 			break;
 		vCancelingOrders.push_back(Req);
 	}
@@ -3475,14 +3459,14 @@ void orderlist_redraw()
 	orderlist_display_focus();
 }
 
-void orderlist_reset(const char *user)
+void orderlist_reset(const char *UserID)
 {
 	// Order List Curses
 	orderlist_curr_line=0,orderlist_curr_col=1,orderlist_max_cols=7;
 	orderlist_curr_pos=0,orderlist_curr_col_pos=2;
 	std::vector<CThostFtdcOrderField>::iterator iter;
 	for(iter=vOrders.begin();iter!=vOrders.end();){
-		if(strcmp(iter->InvestorID,user)==0){
+		if(strcmp(iter->InvestorID,UserID)==0){
 			vOrders.erase(iter);
 			iter=vOrders.begin();
 			continue;
@@ -3514,15 +3498,15 @@ void orderlist_display_title()
 		if(maxx-x<orderlist_column_items[*iter].width)
 			break;
 		switch(*iter){
-		case ORDERLIST_COL_ACC_ID:		//product_id
+		case ORDERLIST_COL_ACC_ID:		//InstrumentID
 			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_ACC_ID].width,orderlist_column_items[ORDERLIST_COL_ACC_ID].name);
 			x+=orderlist_column_items[ORDERLIST_COL_ACC_ID].width;
 			break;
-		case ORDERLIST_COL_SYMBOL:		//product_id
+		case ORDERLIST_COL_SYMBOL:		//InstrumentID
 			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_SYMBOL].width,orderlist_column_items[ORDERLIST_COL_SYMBOL].name);
 			x+=orderlist_column_items[ORDERLIST_COL_SYMBOL].width;
 			break;
-		case ORDERLIST_COL_SYMBOL_NAME:		//product_name
+		case ORDERLIST_COL_SYMBOL_NAME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_SYMBOL_NAME].width,orderlist_column_items[ORDERLIST_COL_SYMBOL_NAME].name);
 			x+=orderlist_column_items[ORDERLIST_COL_SYMBOL_NAME].width+1;
 			break;
@@ -3634,7 +3618,7 @@ void orderlist_display_status()
 	
 	mvprintw(y-1,0,"[%d/%d]",orderlist_curr_pos+orderlist_curr_line,vOrders.size());
 	mvprintw(y - 1, 15, "%s", status_message);
-	mvprintw(y-1,x-25,"%s %s",pTradeRsp->user,tradetime);
+	mvprintw(y-1,x-25,"%s %s",pTradeRsp->UserID,tradetime);
 }
 
 
@@ -3654,7 +3638,7 @@ void orderlist_display_order(int index)
 	x=0;
 
 	for(j=0;j<vquotes.size();j++)
-		if(strcmp(vquotes[j].product_id,vOrders[i].InstrumentID)==0)
+		if(strcmp(vquotes[j].InstrumentID,vOrders[i].InstrumentID)==0)
 			break;
 	if(j==vquotes.size())
 		return;
@@ -3669,16 +3653,16 @@ void orderlist_display_order(int index)
 		if(maxx-x<orderlist_column_items[*iter].width)
 			break;
 		switch(*iter){
-		case ORDERLIST_COL_ACC_ID:		//product_id
+		case ORDERLIST_COL_ACC_ID:		//InstrumentID
 			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_ACC_ID].width,vOrders[i].InvestorID);
 			x+=orderlist_column_items[ORDERLIST_COL_ACC_ID].width;
 			break;
-		case ORDERLIST_COL_SYMBOL:		//product_id
+		case ORDERLIST_COL_SYMBOL:		//InstrumentID
 			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_SYMBOL].width,vOrders[i].InstrumentID);
 			x+=orderlist_column_items[ORDERLIST_COL_SYMBOL].width;
 			break;
-		case ORDERLIST_COL_SYMBOL_NAME:		//product_name
-			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_SYMBOL].width, vquotes[j].product_name);
+		case ORDERLIST_COL_SYMBOL_NAME:		//Instrument.InstrumentName
+			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_SYMBOL].width, vquotes[j].Instrument.InstrumentName);
 			x+=orderlist_column_items[ORDERLIST_COL_SYMBOL_NAME].width+1;
 			break;
 		case ORDERLIST_COL_DIRECTION:		//close
@@ -3718,11 +3702,11 @@ void orderlist_display_order(int index)
 				mvprintw(y,x,"%*.*f",orderlist_column_items[ORDERLIST_COL_AVG_PRICE].width,vquotes[j].precision,vOrders[i].LimitPrice);
 			x+=orderlist_column_items[ORDERLIST_COL_AVG_PRICE].width+1;
 			break;
-		case ORDERLIST_COL_APPLY_TIME:		//product_name
+		case ORDERLIST_COL_APPLY_TIME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_APPLY_TIME].width,vOrders[i].InsertTime);
 			x+=orderlist_column_items[ORDERLIST_COL_APPLY_TIME].width+1;
 			break;
-		case ORDERLIST_COL_UPDATE_TIME:		//product_name
+		case ORDERLIST_COL_UPDATE_TIME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_UPDATE_TIME].width,vOrders[i].UpdateTime);
 			x+=orderlist_column_items[ORDERLIST_COL_UPDATE_TIME].width+1;
 			break;
@@ -3750,15 +3734,15 @@ void orderlist_display_order(int index)
 				mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_SH_FLAG].width,"套利");
 			x+=orderlist_column_items[ORDERLIST_COL_SH_FLAG].width+1;
 			break;
-		case ORDERLIST_COL_ORDERID:		//product_name
+		case ORDERLIST_COL_ORDERID:		//Instrument.InstrumentName
 			mvprintw(y,x,"%*s",orderlist_column_items[ORDERLIST_COL_ORDERID].width,vOrders[i].OrderSysID);
 			x+=orderlist_column_items[ORDERLIST_COL_ORDERID].width+1;
 			break;
-		case ORDERLIST_COL_EXCHANGE_NAME:		//product_name
+		case ORDERLIST_COL_EXCHANGE_NAME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_EXCHANGE_NAME].width,vOrders[i].ExchangeID);
 			x+=orderlist_column_items[ORDERLIST_COL_EXCHANGE_NAME].width+1;
 			break;
-		case ORDERLIST_COL_DESC:		//product_name
+		case ORDERLIST_COL_DESC:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",orderlist_column_items[ORDERLIST_COL_DESC].width,vOrders[i].StatusMsg);
 			x+=orderlist_column_items[ORDERLIST_COL_DESC].width+1;
 			break;
@@ -4005,14 +3989,14 @@ void filllist_redraw()
 	filllist_display_focus();
 }
 
-void filllist_reset(const char *user)
+void filllist_reset(const char *UserID)
 {
 	// Filled Order List Curses
 	filllist_curr_line=0,filllist_curr_col=1,filllist_max_cols=7;
 	filllist_curr_pos=0,filllist_curr_col_pos=2;
 	std::vector<CThostFtdcTradeField>::iterator iter;
 	for(iter=vFilledOrders.begin();iter!=vFilledOrders.end();){
-		if(strcmp(iter->InvestorID,user)==0){
+		if(strcmp(iter->InvestorID,UserID)==0){
 			vFilledOrders.erase(iter);
 			iter=vFilledOrders.begin();
 			continue;
@@ -4043,15 +4027,15 @@ void filllist_display_title()
 		if(maxx-x<filllist_column_items[*iter].width)
 			break;
 		switch(*iter){
-		case FILLLIST_COL_ACC_ID:		//product_id
+		case FILLLIST_COL_ACC_ID:		//InstrumentID
 			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_ACC_ID].width,filllist_column_items[FILLLIST_COL_ACC_ID].name);
 			x+=filllist_column_items[FILLLIST_COL_ACC_ID].width;
 			break;
-		case FILLLIST_COL_SYMBOL:		//product_id
+		case FILLLIST_COL_SYMBOL:		//InstrumentID
 			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_SYMBOL].width,filllist_column_items[FILLLIST_COL_SYMBOL].name);
 			x+=filllist_column_items[FILLLIST_COL_SYMBOL].width;
 			break;
-		case FILLLIST_COL_SYMBOL_NAME:		//product_name
+		case FILLLIST_COL_SYMBOL_NAME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_SYMBOL_NAME].width,filllist_column_items[FILLLIST_COL_SYMBOL_NAME].name);
 			x+=filllist_column_items[FILLLIST_COL_SYMBOL_NAME].width+1;
 			break;
@@ -4147,7 +4131,7 @@ void filllist_display_status()
 	
 	mvprintw(y-1,0,"[%d/%d]",filllist_curr_pos+filllist_curr_line,vFilledOrders.size());
 	mvprintw(y - 1, 15, "%s", status_message);
-	mvprintw(y-1,x-25,"%s %s", pTradeRsp->user,tradetime);
+	mvprintw(y-1,x-25,"%s %s", pTradeRsp->UserID,tradetime);
 }
 
 
@@ -4167,7 +4151,7 @@ void filllist_display_filledorder(int index)
 	x=0;
 
 	for(j=0;j<vquotes.size();j++)
-		if(strcmp(vquotes[j].product_id,vFilledOrders[i].InstrumentID)==0)
+		if(strcmp(vquotes[j].InstrumentID,vFilledOrders[i].InstrumentID)==0)
 			break;
 	if(j==vquotes.size())
 		return;
@@ -4182,16 +4166,16 @@ void filllist_display_filledorder(int index)
 		if(maxx-x<filllist_column_items[*iter].width)
 			break;
 		switch(*iter){
-		case FILLLIST_COL_ACC_ID:		//product_id
+		case FILLLIST_COL_ACC_ID:		//InstrumentID
 			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_ACC_ID].width,vFilledOrders[i].InvestorID);
 			x+=filllist_column_items[FILLLIST_COL_ACC_ID].width;
 			break;
-		case FILLLIST_COL_SYMBOL:		//product_id
+		case FILLLIST_COL_SYMBOL:		//InstrumentID
 			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_SYMBOL].width,vFilledOrders[i].InstrumentID);
 			x+=filllist_column_items[FILLLIST_COL_SYMBOL].width;
 			break;
-		case FILLLIST_COL_SYMBOL_NAME:		//product_name
-			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_SYMBOL].width, vquotes[j].product_name);
+		case FILLLIST_COL_SYMBOL_NAME:		//Instrument.InstrumentName
+			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_SYMBOL].width, vquotes[j].Instrument.InstrumentName);
 			x+=filllist_column_items[FILLLIST_COL_SYMBOL_NAME].width+1;
 			break;
 		case FILLLIST_COL_DIRECTION:		//close
@@ -4220,7 +4204,7 @@ void filllist_display_filledorder(int index)
 				mvprintw(y,x,"%*.*f",filllist_column_items[FILLLIST_COL_PRICE].width,vquotes[j].precision,vFilledOrders[i].Price);
 			x+=filllist_column_items[FILLLIST_COL_PRICE].width+1;
 			break;
-		case FILLLIST_COL_TIME:		//product_name
+		case FILLLIST_COL_TIME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_TIME].width,vFilledOrders[i].TradeTime);
 			x+=filllist_column_items[FILLLIST_COL_TIME].width+1;
 			break;
@@ -4233,15 +4217,15 @@ void filllist_display_filledorder(int index)
 				mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_SH_FLAG].width,"套利");
 			x+=filllist_column_items[FILLLIST_COL_SH_FLAG].width+1;
 			break;
-		case FILLLIST_COL_FILLID:		//product_name
+		case FILLLIST_COL_FILLID:		//Instrument.InstrumentName
 			mvprintw(y,x,"%*s",filllist_column_items[FILLLIST_COL_FILLID].width,vFilledOrders[i].TradeID);
 			x+=filllist_column_items[FILLLIST_COL_FILLID].width+1;
 			break;
-		case FILLLIST_COL_ORDERID:		//product_name
+		case FILLLIST_COL_ORDERID:		//Instrument.InstrumentName
 			mvprintw(y,x,"%*s",filllist_column_items[FILLLIST_COL_ORDERID].width,vFilledOrders[i].OrderSysID);
 			x+=filllist_column_items[FILLLIST_COL_ORDERID].width+1;
 			break;
-		case FILLLIST_COL_EXCHANGE_NAME:		//product_name
+		case FILLLIST_COL_EXCHANGE_NAME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",filllist_column_items[FILLLIST_COL_EXCHANGE_NAME].width,vFilledOrders[i].ExchangeID);
 			x+=filllist_column_items[FILLLIST_COL_EXCHANGE_NAME].width+1;
 			break;
@@ -4488,14 +4472,14 @@ void positionlist_redraw()
 	positionlist_display_focus();
 }
 
-void positionlist_reset(const char *user)
+void positionlist_reset(const char *UserID)
 {
 	// Position List Curses
 	positionlist_curr_line=0,positionlist_curr_col=1,positionlist_max_cols=7;
 	positionlist_curr_pos=0,positionlist_curr_col_pos=2;
 	std::vector<stPosition_t>::iterator iter;
 	for(iter=vPositions.begin();iter!=vPositions.end();){
-		if(strcmp(iter->AccID,user)==0){
+		if(strcmp(iter->InvestorID,UserID)==0){
 			vPositions.erase(iter);
 			iter=vPositions.begin();
 			continue;
@@ -4526,15 +4510,15 @@ void positionlist_display_title()
 		if(maxx-x<positionlist_column_items[*iter].width)
 			break;
 		switch(*iter){
-		case POSITIONLIST_COL_ACC_ID:		//product_id
+		case POSITIONLIST_COL_ACC_ID:		//InstrumentID
 			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_ACC_ID].width,positionlist_column_items[POSITIONLIST_COL_ACC_ID].name);
 			x+=positionlist_column_items[POSITIONLIST_COL_ACC_ID].width;
 			break;
-		case POSITIONLIST_COL_SYMBOL:		//product_id
+		case POSITIONLIST_COL_SYMBOL:		//InstrumentID
 			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_SYMBOL].width,positionlist_column_items[POSITIONLIST_COL_SYMBOL].name);
 			x+=positionlist_column_items[POSITIONLIST_COL_SYMBOL].width;
 			break;
-		case POSITIONLIST_COL_SYMBOL_NAME:		//product_name
+		case POSITIONLIST_COL_SYMBOL_NAME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_SYMBOL_NAME].width,positionlist_column_items[POSITIONLIST_COL_SYMBOL_NAME].name);
 			x+=positionlist_column_items[POSITIONLIST_COL_SYMBOL_NAME].width+1;
 			break;
@@ -4654,7 +4638,7 @@ void positionlist_display_status()
 	
 	mvprintw(y-1,0,"[%d/%d]",positionlist_curr_pos+positionlist_curr_line,vPositions.size());
 	mvprintw(y - 1, 15, "%s", status_message);
-	mvprintw(y-1,x-25,"%s %s", pTradeRsp->user,tradetime);
+	mvprintw(y-1,x-25,"%s %s", pTradeRsp->UserID,tradetime);
 }
 
 
@@ -4667,7 +4651,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 		return;
 	getmaxyx(stdscr,maxy,maxx);
 	for(i=0;i<vPositions.size();i++)
-		if(strcmp(vPositions[i].AccID,szAccID)==0 && strcmp(vPositions[i].ExchangeID,szExchangeID)==0 && strcmp(vPositions[i].InstrumentID,szInstrumentID)==0)
+		if(strcmp(vPositions[i].InvestorID,szAccID)==0 && strcmp(vPositions[i].ExchangeID,szExchangeID)==0 && strcmp(vPositions[i].InstrumentID,szInstrumentID)==0)
 			break;
 	if(i<positionlist_curr_pos || i>positionlist_curr_pos+positionlist_max_lines-1)
 		return;
@@ -4675,7 +4659,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 	x=0;
 
 	for(j=0;j<vquotes.size();j++)
-		if(strcmp(vquotes[j].product_id,vPositions[i].InstrumentID)==0)
+		if(strcmp(vquotes[j].InstrumentID,vPositions[i].InstrumentID)==0)
 			break;
 	if(j==vquotes.size())
 		return;
@@ -4690,16 +4674,16 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 		if(maxx-x<positionlist_column_items[*iter].width)
 			break;
 		switch(*iter){
-		case POSITIONLIST_COL_ACC_ID:		//product_id
-			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_ACC_ID].width,vPositions[i].AccID);
+		case POSITIONLIST_COL_ACC_ID:		//InstrumentID
+			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_ACC_ID].width,vPositions[i].InvestorID);
 			x+=positionlist_column_items[POSITIONLIST_COL_ACC_ID].width;
 			break;
-		case POSITIONLIST_COL_SYMBOL:		//product_id
+		case POSITIONLIST_COL_SYMBOL:		//InstrumentID
 			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_SYMBOL].width,vPositions[i].InstrumentID);
 			x+=positionlist_column_items[POSITIONLIST_COL_SYMBOL].width;
 			break;
-		case POSITIONLIST_COL_SYMBOL_NAME:		//product_name
-			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_SYMBOL].width, vquotes[j].product_name);
+		case POSITIONLIST_COL_SYMBOL_NAME:		//Instrument.InstrumentName
+			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_SYMBOL].width, vquotes[j].Instrument.InstrumentName);
 			x+=positionlist_column_items[POSITIONLIST_COL_SYMBOL_NAME].width+1;
 			break;
 		case POSITIONLIST_COL_VOLUME:		//volume
@@ -4716,7 +4700,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 				mvprintw(y,x,"%*.*f",positionlist_column_items[POSITIONLIST_COL_AVG_PRICE].width,vquotes[j].precision,vPositions[i].Price);
 			x+=positionlist_column_items[POSITIONLIST_COL_AVG_PRICE].width+1;
 			break;
-		case POSITIONLIST_COL_PROFITLOSS:		//product_name
+		case POSITIONLIST_COL_PROFITLOSS:		//Instrument.InstrumentName
 			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_PROFITLOSS].width,GetProfitLoss(vPositions[i].InstrumentID));
 			x+=positionlist_column_items[POSITIONLIST_COL_PROFITLOSS].width+1;
 			break;
@@ -4724,7 +4708,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_MARGIN].width,vPositions[i].Margin);
 			x+=positionlist_column_items[POSITIONLIST_COL_MARGIN].width+1;
 			break;
-		case POSITIONLIST_COL_AMOUNT:		//product_name
+		case POSITIONLIST_COL_AMOUNT:		//Instrument.InstrumentName
 			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_AMOUNT].width,vPositions[i].Balance);
 			x+=positionlist_column_items[POSITIONLIST_COL_AMOUNT].width+1;
 			break;
@@ -4739,7 +4723,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 				mvprintw(y,x,"%*.*f",positionlist_column_items[POSITIONLIST_COL_BUY_PRICE].width,vquotes[j].precision,vPositions[i].AvgBuyPrice);
 			x+=positionlist_column_items[POSITIONLIST_COL_BUY_PRICE].width+1;
 			break;
-		case POSITIONLIST_COL_BUY_PROFITLOSS:		//product_name
+		case POSITIONLIST_COL_BUY_PROFITLOSS:		//Instrument.InstrumentName
 			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_BUY_PROFITLOSS].width, GetBuyProfitLoss(vPositions[i].InstrumentID));
 			x+=positionlist_column_items[POSITIONLIST_COL_BUY_PROFITLOSS].width+1;
 			break;
@@ -4758,7 +4742,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 				mvprintw(y,x,"%*.*f",positionlist_column_items[POSITIONLIST_COL_SELL_PRICE].width,vquotes[j].precision,vPositions[i].AvgSellPrice);
 			x+=positionlist_column_items[POSITIONLIST_COL_SELL_PRICE].width+1;
 			break;
-		case POSITIONLIST_COL_SELL_PROFITLOSS:		//product_name
+		case POSITIONLIST_COL_SELL_PROFITLOSS:		//Instrument.InstrumentName
 			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_SELL_PROFITLOSS].width, GetSellProfitLoss(vPositions[i].InstrumentID));
 			x+=positionlist_column_items[POSITIONLIST_COL_SELL_PROFITLOSS].width+1;
 			break;
@@ -4766,7 +4750,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 			mvprintw(y,x,"%*d",positionlist_column_items[POSITIONLIST_COL_SELL_TODAY].width,vPositions[i].TodaySellVolume);
 			x+=positionlist_column_items[POSITIONLIST_COL_SELL_TODAY].width+1;
 			break;
-		case POSITIONLIST_COL_EXCHANGE_NAME:		//product_name
+		case POSITIONLIST_COL_EXCHANGE_NAME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",positionlist_column_items[POSITIONLIST_COL_EXCHANGE_NAME].width,vPositions[i].ExchangeID);
 			x+=positionlist_column_items[POSITIONLIST_COL_EXCHANGE_NAME].width+1;
 			break;
@@ -4779,7 +4763,7 @@ void positionlist_display_position(const char *szAccID,const char *szExchangeID,
 void positionlist_display_positions()
 {
 	for(size_t i=0;i<vPositions.size();i++)
-		positionlist_display_position(vPositions[i].AccID,vPositions[i].ExchangeID,vPositions[i].InstrumentID);
+		positionlist_display_position(vPositions[i].InvestorID,vPositions[i].ExchangeID,vPositions[i].InstrumentID);
 }
 
 void positionlist_display_focus()
@@ -5013,7 +4997,7 @@ void acclist_redraw()
 	acclist_display_focus();
 }
 
-void acclist_reset(const char *user)
+void acclist_reset(const char *UserID)
 {
 	// Account List Curses
 // 	acclist_curr_line=0,acclist_curr_col=1,acclist_max_lines,acclist_max_cols=7;
@@ -5041,11 +5025,11 @@ void acclist_display_title()
 		if(maxx-x<acclist_column_items[*iter].width)
 			break;
 		switch(*iter){
-		case ACCLIST_COL_ACC_ID:		//product_id
+		case ACCLIST_COL_ACC_ID:		//InstrumentID
 			mvprintw(y,x,"%-*s",acclist_column_items[ACCLIST_COL_ACC_ID].width,acclist_column_items[ACCLIST_COL_ACC_ID].name);
 			x+=acclist_column_items[ACCLIST_COL_ACC_ID].width;
 			break;
-		case ACCLIST_COL_ACC_NAME:		//product_name
+		case ACCLIST_COL_ACC_NAME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",acclist_column_items[ACCLIST_COL_ACC_NAME].width,acclist_column_items[ACCLIST_COL_ACC_NAME].name);
 			x+=acclist_column_items[ACCLIST_COL_ACC_NAME].width+1;
 			break;
@@ -5157,7 +5141,7 @@ void acclist_display_status()
 	
 	mvprintw(y-1,0,"[%d/%d]",acclist_curr_pos+acclist_curr_line,vAccounts.size());
 	mvprintw(y - 1, 15, "%s", status_message);
-	mvprintw(y-1,x-25,"%s %s", pTradeRsp->user,tradetime);
+	mvprintw(y-1,x-25,"%s %s", pTradeRsp->UserID,tradetime);
 }
 
 
@@ -5171,7 +5155,7 @@ void acclist_display_acc(const char *szBrokerID,const char *szAccID)
 		return;
 	getmaxyx(stdscr,maxy,maxx);
 	for(i=0;i<vAccounts.size();i++)
-		if(strcmp(vAccounts[i].BrokerID,szBrokerID)==0 && strcmp(vAccounts[i].AccID,szAccID)==0)
+		if(strcmp(vAccounts[i].BrokerID,szBrokerID)==0 && strcmp(vAccounts[i].AccountID,szAccID)==0)
 			break;
 	if(i<acclist_curr_pos || i>acclist_curr_pos+acclist_max_lines-1)
 		return;
@@ -5189,12 +5173,12 @@ void acclist_display_acc(const char *szBrokerID,const char *szAccID)
 		if(maxx-x<acclist_column_items[*iter].width)
 			break;
 		switch(*iter){
-		case ACCLIST_COL_ACC_ID:		//product_id
-			mvprintw(y,x,"%-*s",acclist_column_items[ACCLIST_COL_ACC_ID].width,vAccounts[i].AccID);
+		case ACCLIST_COL_ACC_ID:		//InstrumentID
+			mvprintw(y,x,"%-*s",acclist_column_items[ACCLIST_COL_ACC_ID].width,vAccounts[i].AccountID);
 			x+=acclist_column_items[ACCLIST_COL_ACC_ID].width;
 			break;
-		case ACCLIST_COL_ACC_NAME:		//product_name
-			mvprintw(y,x,"%-*s",acclist_column_items[ACCLIST_COL_ACC_NAME].width,vAccounts[i].AccName);
+		case ACCLIST_COL_ACC_NAME:		//Instrument.InstrumentName
+			//mvprintw(y,x,"%-*s",acclist_column_items[ACCLIST_COL_ACC_NAME].width,vAccounts[i].InvestorName);
 			x+=acclist_column_items[ACCLIST_COL_ACC_NAME].width+1;
 			break;
 		case ACCLIST_COL_PRE_BALANCE:		//volume
@@ -5202,46 +5186,46 @@ void acclist_display_acc(const char *szBrokerID,const char *szAccID)
 			x+=acclist_column_items[ACCLIST_COL_PRE_BALANCE].width+1;
 			break;
 		case ACCLIST_COL_MONEY_IN:		//close
-			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_MONEY_IN].width,vAccounts[i].MoneyIn);
+			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_MONEY_IN].width,vAccounts[i].Deposit);
 			x+=acclist_column_items[ACCLIST_COL_MONEY_IN].width+1;
 			break;
-		case ACCLIST_COL_MONEY_OUT:		//product_name
-			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_MONEY_OUT].width,vAccounts[i].MoneyOut);
+		case ACCLIST_COL_MONEY_OUT:		//Instrument.InstrumentName
+			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_MONEY_OUT].width,vAccounts[i].Withdraw);
 			x+=acclist_column_items[ACCLIST_COL_MONEY_OUT].width+1;
 			break;
-		case ACCLIST_COL_FROZEN_MARGIN:		//product_name
+		case ACCLIST_COL_FROZEN_MARGIN:		//Instrument.InstrumentName
 			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_FROZEN_MARGIN].width,vAccounts[i].FrozenMargin);
 			x+=acclist_column_items[ACCLIST_COL_FROZEN_MARGIN].width+1;
 			break;
-		case ACCLIST_COL_MONEY_FROZEN:		//product_name
-			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_MONEY_FROZEN].width,vAccounts[i].MoneyFrozen);
+		case ACCLIST_COL_MONEY_FROZEN:		//Instrument.InstrumentName
+			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_MONEY_FROZEN].width,vAccounts[i].FrozenCash);
 			x+=acclist_column_items[ACCLIST_COL_MONEY_FROZEN].width+1;
 			break;
-		case ACCLIST_COL_FEE_FROZEN:		//product_name
-			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_FEE_FROZEN].width,vAccounts[i].FeeFrozen);
+		case ACCLIST_COL_FEE_FROZEN:		//Instrument.InstrumentName
+			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_FEE_FROZEN].width,vAccounts[i].FrozenCommission);
 			x+=acclist_column_items[ACCLIST_COL_FEE_FROZEN].width+1;
 			break;
 		case ACCLIST_COL_MARGIN:		//close
-			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_MARGIN].width,vAccounts[i].Margin);
+			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_MARGIN].width,vAccounts[i].CurrMargin);
 			x+=acclist_column_items[ACCLIST_COL_MARGIN].width+1;
 			break;
-		case ACCLIST_COL_FEE:		//product_name
-			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_FEE].width,vAccounts[i].Fee);
+		case ACCLIST_COL_FEE:		//Instrument.InstrumentName
+			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_FEE].width,vAccounts[i].Commission);
 			x+=acclist_column_items[ACCLIST_COL_FEE].width+1;
 			break;
-		case ACCLIST_COL_CLOSE_PROFIT_LOSS:		//product_name
-			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_CLOSE_PROFIT_LOSS].width,vAccounts[i].CloseProfitLoss);
+		case ACCLIST_COL_CLOSE_PROFIT_LOSS:		//Instrument.InstrumentName
+			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_CLOSE_PROFIT_LOSS].width,vAccounts[i].CloseProfit);
 			x+=acclist_column_items[ACCLIST_COL_CLOSE_PROFIT_LOSS].width+1;
 			break;
-		case ACCLIST_COL_FLOAT_PROFIT_LOSS:		//product_name
-			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_FLOAT_PROFIT_LOSS].width,vAccounts[i].FloatProfitLoss);
+		case ACCLIST_COL_FLOAT_PROFIT_LOSS:		//Instrument.InstrumentName
+			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_FLOAT_PROFIT_LOSS].width,vAccounts[i].PositionProfit);
 			x+=acclist_column_items[ACCLIST_COL_FLOAT_PROFIT_LOSS].width+1;
 			break;
-		case ACCLIST_COL_BALANCE_AVAILABLE:		//product_name
-			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_BALANCE_AVAILABLE].width,vAccounts[i].BalanceAvailable);
+		case ACCLIST_COL_BALANCE_AVAILABLE:		//Instrument.InstrumentName
+			mvprintw(y,x,"%*.2f",acclist_column_items[ACCLIST_COL_BALANCE_AVAILABLE].width,vAccounts[i].Available);
 			x+=acclist_column_items[ACCLIST_COL_BALANCE_AVAILABLE].width+1;
 			break;
-		case ACCLIST_COL_BROKER_ID:		//product_name
+		case ACCLIST_COL_BROKER_ID:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",acclist_column_items[ACCLIST_COL_BROKER_ID].width,vAccounts[i].BrokerID);
 			x+=acclist_column_items[ACCLIST_COL_BROKER_ID].width+1;
 			break;
@@ -5254,7 +5238,7 @@ void acclist_display_acc(const char *szBrokerID,const char *szAccID)
 void acclist_display_accs()
 {
 	for(size_t i=0;i<vAccounts.size();i++)
-		acclist_display_acc(vAccounts[i].BrokerID,vAccounts[i].AccID);
+		acclist_display_acc(vAccounts[i].BrokerID,vAccounts[i].AccountID);
 }
 
 void acclist_display_focus()
@@ -5503,13 +5487,13 @@ void symbol_refresh_screen()
 	symbol_display_title();
 	std::vector<quotation_t>::iterator iter;
 	for(iter=vquotes.begin();iter!=vquotes.end();iter++)
-		if(strcmp(iter->product_id,symbol_curr_product_id)==0){
+		if(strcmp(iter->InstrumentID,symbol_curr_product_id)==0){
 			break;
 		}
 	i=1;	
-	mvprintw(i++,0,"合约名称：%s",iter->product_name);
-	mvprintw(i++,0,"交易所代码：%s",iter->exchange_id);
-	mvprintw(i++,0,"交易所名称：%s",iter->exchange_name);
+	mvprintw(i++,0,"合约名称：%s",iter->Instrument.InstrumentName);
+	mvprintw(i++,0,"交易所代码：%s",iter->ExchangeID);
+	mvprintw(i++,0,"交易所名称：%s",iter->Instrument.ExchangeID);
 	mvprintw(i++,0,"合约乘数：%d",iter->Instrument.VolumeMultiple);
 	mvprintw(i++,0,"最小变动价位：%.*f",iter->precision,iter->Instrument.PriceTick);
 	if(iter->Instrument.ShortMarginRatio==DBL_MAX)
@@ -5580,11 +5564,11 @@ void display_title()
 		if(maxx-x<column_items[*iter].width)
 			break;
 		switch(*iter){
-		case COL_SYMBOL:		//product_id
+		case COL_SYMBOL:		//InstrumentID
 			mvprintw(y,x,"%-*s",column_items[COL_SYMBOL].width,column_items[COL_SYMBOL].name);
 			x+=column_items[COL_SYMBOL].width;
 			break;
-		case COL_SYMBOL_NAME:		//product_name
+		case COL_SYMBOL_NAME:		//Instrument.InstrumentName
 			mvprintw(y,x,"%-*s",column_items[COL_SYMBOL_NAME].width,column_items[COL_SYMBOL_NAME].name);
 			x+=column_items[COL_SYMBOL_NAME].width+1;
 			break;
@@ -5717,7 +5701,7 @@ void order_display_title()
 
 	std::vector<stPosition_t>::iterator iter;
 	for(iter=vPositions.begin();iter!=vPositions.end();iter++){
-		if(strcmp(iter->AccID,order_curr_accname)==0 && strcmp(iter->InstrumentID,vquotes[order_symbol_index].product_id)==0)
+		if(strcmp(iter->InvestorID,order_curr_accname)==0 && strcmp(iter->InstrumentID,vquotes[order_symbol_index].InstrumentID)==0)
 			break;
 	}
 	if(iter!=vPositions.end()){
@@ -5732,7 +5716,7 @@ void order_display_title()
 // 	
 // 	std::vector<CThostFtdcOrderField>::iterator iter2;
 // 	for(iter2=vOrders.begin();iter2!=vOrders.end();iter2++){
-// 		if(strcmp(iter2->InstrumentID,vquotes[order_symbol_index].product_id)!=0)
+// 		if(strcmp(iter2->InstrumentID,vquotes[order_symbol_index].InstrumentID)!=0)
 // 			continue;
 // 		if(iter2->OrderStatus==THOST_FTDC_OST_AllTraded || iter2->OrderStatus==THOST_FTDC_OST_Canceled)
 // 			continue;
@@ -5746,7 +5730,7 @@ void order_display_title()
 	//std::vector<CThostFtdcOrderField>::iterator iterOrder;
 	//std::vector<CThostFtdcInputOrderActionField>::iterator iterCanceling;
 	//for(iterOrder=vOrders.begin();iterOrder!=vOrders.end();iterOrder++){
-	//	if(strcmp(iterOrder->InvestorID,order_curr_accname)!=0 || strcmp(iterOrder->InstrumentID,vquotes[order_symbol_index].product_id)!=0 || iterOrder->OrderStatus==THOST_FTDC_OST_AllTraded || iterOrder->OrderStatus==THOST_FTDC_OST_Canceled)
+	//	if(strcmp(iterOrder->InvestorID,order_curr_accname)!=0 || strcmp(iterOrder->InstrumentID,vquotes[order_symbol_index].InstrumentID)!=0 || iterOrder->OrderStatus==THOST_FTDC_OST_AllTraded || iterOrder->OrderStatus==THOST_FTDC_OST_Canceled)
 	//		continue;
 	//	if(iterOrder->OrderStatus==THOST_FTDC_OST_NoTradeQueueing || iterOrder->OrderStatus==THOST_FTDC_OST_PartTradedNotQueueing){
 	//		if(iterOrder->Direction==THOST_FTDC_D_Buy)
@@ -5818,7 +5802,7 @@ void order_display_title()
 		PL += (AvgSellPrice - close_price) * nSellPosi * vquotes[order_symbol_index].Instrument.VolumeMultiple;
 	if(nBuyPosi!=0 && nSellPosi!=0){
 		mvprintw(0,0,"%s  %.*f(%.1f%%)  持仓:%d*(%d/%d)  盈亏:%.2f\n",
-			vquotes[order_symbol_index].product_name,	// 合约
+			vquotes[order_symbol_index].Instrument.InstrumentName,	// 合约
 			precision,
 			offset,	// 涨跌
 			ratio,	// 涨跌幅
@@ -5834,7 +5818,7 @@ void order_display_title()
 			PL);	// 盈亏
 	}else{
 		mvprintw(0,0,"%s  %.*f(%.1f%%)  持仓:%d  盈亏:%.2f\n",
-			vquotes[order_symbol_index].product_name,	// 合约
+			vquotes[order_symbol_index].Instrument.InstrumentName,	// 合约
 			precision,
 			offset,	// 涨跌
 			ratio,	// 涨跌幅
@@ -6199,7 +6183,7 @@ int goto_mainboard_window_from_order()
 	unsubscribe(order_symbol_index);
 	for(size_t i=curr_pos;i<vquotes.size() && i<curr_pos+max_lines;i++){
 		if(vquotes[i].subscribed){
-			ppInstrumentID[0]=vquotes[i].product_id;
+			ppInstrumentID[0]=vquotes[i].InstrumentID;
 			if(pMarketRsp->m_pMarketReq->SubscribeMarketData(ppInstrumentID, 1)<0)
 				return -1;
 			vquotes[i].subscribed=true;
@@ -6261,7 +6245,7 @@ int goto_mainboard_window_from_orderlist()
 	
 	for(size_t i=curr_pos;i<vquotes.size() && i<curr_pos+max_lines;i++){
 		if(vquotes[i].subscribed){
-			ppInstrumentID[0]=vquotes[i].product_id;
+			ppInstrumentID[0]=vquotes[i].InstrumentID;
 			if(pMarketRsp->m_pMarketReq->SubscribeMarketData(ppInstrumentID, 1)<0)
 				return -1;
 			vquotes[i].subscribed=true;
@@ -6280,7 +6264,7 @@ int goto_mainboard_window_from_filllist()
 	
 	for(size_t i=curr_pos;i<vquotes.size() && i<curr_pos+max_lines;i++){
 		if(vquotes[i].subscribed){
-			ppInstrumentID[0]=vquotes[i].product_id;
+			ppInstrumentID[0]=vquotes[i].InstrumentID;
 			if(pMarketRsp->m_pMarketReq->SubscribeMarketData(ppInstrumentID, 1)<0)
 				return -1;
 			vquotes[i].subscribed=true;
@@ -6299,7 +6283,7 @@ int goto_mainboard_window_from_positionlist()
 	
 	for(size_t i=curr_pos;i<vquotes.size() && i<curr_pos+max_lines;i++){
 		if(vquotes[i].subscribed){
-			ppInstrumentID[0]=vquotes[i].product_id;
+			ppInstrumentID[0]=vquotes[i].InstrumentID;
 			if(pMarketRsp->m_pMarketReq->SubscribeMarketData(ppInstrumentID, 1)<0)
 				return -1;
 			vquotes[i].subscribed=true;
@@ -6318,7 +6302,7 @@ int goto_mainboard_window_from_acclist()
 	
 	for(size_t i=curr_pos;i<vquotes.size() && i<curr_pos+max_lines;i++){
 		if(vquotes[i].subscribed){
-			ppInstrumentID[0]=vquotes[i].product_id;
+			ppInstrumentID[0]=vquotes[i].InstrumentID;
 			if(pMarketRsp->m_pMarketReq->SubscribeMarketData(ppInstrumentID, 1)<0)
 				return -1;
 			vquotes[i].subscribed=true;
@@ -6337,7 +6321,7 @@ int goto_mainboard_window_from_log()
 	
 	for(size_t i=curr_pos;i<vquotes.size() && i<curr_pos+max_lines;i++){
 		if(vquotes[i].subscribed){
-			ppInstrumentID[0]=vquotes[i].product_id;
+			ppInstrumentID[0]=vquotes[i].InstrumentID;
 			if(pMarketRsp->m_pMarketReq->SubscribeMarketData(ppInstrumentID, 1)<0)
 				return -1;
 			vquotes[i].subscribed=true;
@@ -6358,7 +6342,7 @@ int goto_order_window_from_orderlist()
 	}
 	size_t i;
 	for(i=0;i<vquotes.size();i++){
-		if(strcmp(vquotes[i].product_id,vOrders[orderlist_curr_pos+orderlist_curr_line-1].InstrumentID)==0)
+		if(strcmp(vquotes[i].InstrumentID,vOrders[orderlist_curr_pos+orderlist_curr_line-1].InstrumentID)==0)
 			break;
 	}
 	if(i==vquotes.size())
@@ -6411,7 +6395,7 @@ int goto_mainboard_window_from_column_settings()
 	
 	for(size_t i=curr_pos;i<vquotes.size() && i<curr_pos+max_lines;i++){
 		if(vquotes[i].subscribed){
-			ppInstrumentID[0]=vquotes[i].product_id;
+			ppInstrumentID[0]=vquotes[i].InstrumentID;
 			if(pMarketRsp->m_pMarketReq->SubscribeMarketData(ppInstrumentID, 1)<0)
 				return -1;
 			vquotes[i].subscribed=true;
@@ -6429,7 +6413,7 @@ int goto_mainboard_window_from_symbol()
 	
 	for(size_t i=curr_pos;i<vquotes.size() && i<curr_pos+max_lines;i++){
 		if(vquotes[i].subscribed){
-			ppInstrumentID[0]=vquotes[i].product_id;
+			ppInstrumentID[0]=vquotes[i].InstrumentID;
 			if(pMarketRsp->m_pMarketReq->SubscribeMarketData(ppInstrumentID, 1)<0)
 				return -1;
 			vquotes[i].subscribed=true;
@@ -6699,9 +6683,9 @@ int on_key_pressed_order(int ch)
 void order_open_last_symbol()
 {
 	for(size_t i=0;i<vquotes.size();i++){
-		if(strcmp(order_last_symbol,vquotes[i].product_id)==0){
+		if(strcmp(order_last_symbol,vquotes[i].InstrumentID)==0){
 			unsubscribe(order_symbol_index);
-			strcpy(order_last_symbol,vquotes[order_symbol_index].product_id);
+			strcpy(order_last_symbol,vquotes[order_symbol_index].InstrumentID);
 			order_symbol_index=i;
 			order_curr_price=0;
 			order_page_top_price=0;
@@ -7677,7 +7661,7 @@ int goto_order_window_from_filllist()
 	}
 	int i;
 	for(i=0;i<vquotes.size();i++){
-		if(strcmp(vquotes[i].product_id,vFilledOrders[filllist_curr_pos+filllist_curr_line-1].InstrumentID)==0)
+		if(strcmp(vquotes[i].InstrumentID,vFilledOrders[filllist_curr_pos+filllist_curr_line-1].InstrumentID)==0)
 			break;
 	}
 	if(i==vquotes.size())
@@ -7705,7 +7689,7 @@ int goto_order_window_from_positionlist()
 	}
 	int i;
 	for(i=0;i<vquotes.size();i++){
-		if(strcmp(vquotes[i].product_id,vPositions[positionlist_curr_pos+positionlist_curr_line-1].InstrumentID)==0)
+		if(strcmp(vquotes[i].InstrumentID,vPositions[positionlist_curr_pos+positionlist_curr_line-1].InstrumentID)==0)
 			break;
 	}
 	if(i==vquotes.size())
@@ -7714,7 +7698,7 @@ int goto_order_window_from_positionlist()
 	working_window=WIN_ORDER;
 	order_curr_price=0;
 	order_page_top_price=0;
-	strcpy(order_curr_accname,vPositions[positionlist_curr_pos+positionlist_curr_line-1].AccID);
+	strcpy(order_curr_accname,vPositions[positionlist_curr_pos+positionlist_curr_line-1].InvestorID);
 	order_refresh_screen();
 	order_centralize_current_price();
 	subscribe(order_symbol_index);
@@ -7844,7 +7828,7 @@ int goto_positionlist_window_from_acclist()
 	}
 	int i;
 	for(i=0;i<vPositions.size();i++){
-		if(strcmp(vPositions[i].AccID,vAccounts[acclist_curr_pos+acclist_curr_line-1].AccID)==0 && strcmp(vPositions[i].BrokerID,vAccounts[acclist_curr_pos+acclist_curr_line-1].BrokerID)==0)
+		if(strcmp(vPositions[i].InvestorID,vAccounts[acclist_curr_pos+acclist_curr_line-1].AccountID)==0 && strcmp(vPositions[i].BrokerID,vAccounts[acclist_curr_pos+acclist_curr_line-1].BrokerID)==0)
 			break;
 	}
 	if(i==vPositions.size())
@@ -8131,26 +8115,24 @@ void CTradeRsp::HandleFrontConnected()
 	TradeConnectionStatus=CONNECTION_STATUS_CONNECTED;
 	display_status();
 
-	m_nTradeRequestID=0;
-
 	if(strlen(UserProductInfo)){
 		CThostFtdcReqAuthenticateField AuthenticateReq;
 		memset(&AuthenticateReq,0x00,sizeof(AuthenticateReq));
-		strncpy(AuthenticateReq.BrokerID,broker,sizeof(AuthenticateReq.BrokerID)-1);
-		strncpy(AuthenticateReq.UserID,user,sizeof(AuthenticateReq.UserID)-1);
+		strncpy(AuthenticateReq.BrokerID,BrokerID,sizeof(AuthenticateReq.BrokerID)-1);
+		strncpy(AuthenticateReq.UserID,UserID,sizeof(AuthenticateReq.UserID)-1);
 		strncpy(AuthenticateReq.UserProductInfo,UserProductInfo,sizeof(AuthenticateReq.UserProductInfo)-1);
 		strncpy(AuthenticateReq.AppID,AppID,sizeof(AuthenticateReq.AppID)-1);
 		strcpy(AuthenticateReq.AuthCode,AuthCode); // XTP的认证Key超长，需要借用到后一字段（AppID）的空间
-		m_pTradeReq->ReqAuthenticate(&AuthenticateReq,m_nTradeRequestID++);
+		m_pTradeReq->ReqAuthenticate(&AuthenticateReq,0);
 	}else{
 		CThostFtdcReqUserLoginField Req;
 	
 		memset(&Req,0x00,sizeof(Req));
-		strcpy(Req.BrokerID,broker);
-		strcpy(Req.UserID,user);
-		strcpy(Req.Password,passwd);
+		strcpy(Req.BrokerID,BrokerID);
+		strcpy(Req.UserID,UserID);
+		strcpy(Req.Password,Password);
 		sprintf(Req.UserProductInfo,"%s",UserProductInfo);
-		m_pTradeReq->ReqUserLogin(&Req,m_nTradeRequestID++);
+		m_pTradeReq->ReqUserLogin(&Req,0);
 	}
 }
 void CTradeRsp::HandleFrontDisconnected(int nReason)
@@ -8189,38 +8171,38 @@ void CTradeRsp::HandleFrontDisconnected(int nReason)
 void CTradeRsp::HandleRspAuthenticate(CThostFtdcRspAuthenticateField& RspAuthenticateField, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0)
-		status_print("%s终端认证失败:%s", user, RspInfo.ErrorMsg);
+		status_print("%s终端认证失败:%s", UserID, RspInfo.ErrorMsg);
 	else
-		status_print("%s终端认证成功.", user);
+		status_print("%s终端认证成功.", UserID);
 
 	CThostFtdcReqUserLoginField Req;
 	
 	memset(&Req,0x00,sizeof(Req));
-	strcpy(Req.BrokerID,broker);
-	strcpy(Req.UserID,user);
-	strcpy(Req.Password,passwd);
+	strcpy(Req.BrokerID,BrokerID);
+	strcpy(Req.UserID,UserID);
+	strcpy(Req.Password,Password);
 	sprintf(Req.UserProductInfo,"%s",UserProductInfo);
 	sprintf(Req.ClientIPAddress,"%s",ClientIPAddress);
 	sprintf(Req.MacAddress,"%s",MacAddress);
 	sprintf(Req.LoginRemark,"%s",LoginRemark);
-	m_pTradeReq->ReqUserLogin(&Req,m_nTradeRequestID++);
+	m_pTradeReq->ReqUserLogin(&Req,0);
 }
 
 void CTradeRsp::HandleRspUserLogin(CThostFtdcRspUserLoginField& RspUserLogin,CThostFtdcRspInfoField& RspInfo,int nRequestID,bool bIsLast)
 {
 	if(RspInfo.ErrorID!=0){
-		status_print("%s登录失败:%s",user,RspInfo.ErrorMsg);
+		status_print("%s登录失败:%s",UserID,RspInfo.ErrorMsg);
 		TradeConnectionStatus=CONNECTION_STATUS_LOGINFAILED;
 		display_status();
 		return;
 	}
-	status_print("%s登录成功.",user);
+	status_print("%s登录成功.",UserID);
 
 	// Clear Order Operations
 // 	vInputingOrders.clear();
 	std::vector<CThostFtdcInputOrderActionField>::iterator iter;
 	for(iter=vCancelingOrders.begin();iter!=vCancelingOrders.end();){
-		if(strcmp(iter->InvestorID,user)==0){
+		if(strcmp(iter->InvestorID,UserID)==0){
 			vCancelingOrders.erase(iter);
 			iter=vCancelingOrders.begin();
 			continue;
@@ -8230,35 +8212,35 @@ void CTradeRsp::HandleRspUserLogin(CThostFtdcRspUserLoginField& RspUserLogin,CTh
 	}
 
 	// reset windows on new TradingDay.
-	if (strcmp(RspUserLogin.TradingDay, tradedate) != 0) {
-		orderlist_reset(user);
-		filllist_reset(user);
-		positionlist_reset(user);
-		acclist_reset(user);
+	if (strcmp(RspUserLogin.TradingDay, TradingDay) != 0) {
+		orderlist_reset(UserID);
+		filllist_reset(UserID);
+		positionlist_reset(UserID);
+		acclist_reset(UserID);
 	}
 
 	TradeConnectionStatus=CONNECTION_STATUS_LOGINOK;
-	TradeFrontID=RspUserLogin.FrontID;
-	TradeSessionID=RspUserLogin.SessionID;
-	TradeOrderRef=atol(RspUserLogin.MaxOrderRef);
-	sprintf(tradedate,"%4.4s-%2.2s-%2.2s",RspUserLogin.TradingDay,RspUserLogin.TradingDay+4,RspUserLogin.TradingDay+6);
+	FrontID=RspUserLogin.FrontID;
+	SessionID=RspUserLogin.SessionID;
+	OrderRef=atol(RspUserLogin.MaxOrderRef);
+	strcpy(TradingDay,RspUserLogin.TradingDay);
 	display_status();
 
 	// 确认结算单
 	CThostFtdcSettlementInfoConfirmField SettlementInfoConfirmField;
 	
 	memset(&SettlementInfoConfirmField,0x00,sizeof(SettlementInfoConfirmField));
-	strncpy(SettlementInfoConfirmField.BrokerID,broker,sizeof(SettlementInfoConfirmField.BrokerID)-1);
-	strncpy(SettlementInfoConfirmField.InvestorID,user,sizeof(SettlementInfoConfirmField.InvestorID)-1);
+	strncpy(SettlementInfoConfirmField.BrokerID,BrokerID,sizeof(SettlementInfoConfirmField.BrokerID)-1);
+	strncpy(SettlementInfoConfirmField.InvestorID,UserID,sizeof(SettlementInfoConfirmField.InvestorID)-1);
 	strncpy(SettlementInfoConfirmField.ConfirmDate,RspUserLogin.TradingDay,sizeof(SettlementInfoConfirmField.ConfirmDate)-1);
 	strncpy(SettlementInfoConfirmField.ConfirmTime,RspUserLogin.LoginTime,sizeof(SettlementInfoConfirmField.ConfirmTime)-1);
-	m_pTradeReq->ReqSettlementInfoConfirm(&SettlementInfoConfirmField,m_nTradeRequestID++);
+	m_pTradeReq->ReqSettlementInfoConfirm(&SettlementInfoConfirmField,0);
 
 	CThostFtdcQryInstrumentField Req;
 	int r=0;
 
 	memset(&Req,0x00,sizeof(Req));
-	while((r= m_pTradeReq->ReqQryInstrument(&Req,m_nTradeRequestID++))==-2 || r==-3)
+	while((r= m_pTradeReq->ReqQryInstrument(&Req,0))==-2 || r==-3)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 void CTradeRsp::HandleRspUserLogout(CThostFtdcUserLogoutField& UserLogout,CThostFtdcRspInfoField& RspInfo,int nRequestID,bool bIsLast)
@@ -8287,12 +8269,12 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 	if(Instrument.InstrumentID[0]!='\0'){
 		quotation_t quote;
 		memset(&quote,0x00,sizeof(quote));
-		strcpy(quote.product_id,Instrument.InstrumentID);
-		strcpy(quote.exchange_id,Instrument.ExchangeID);
+		strcpy(quote.InstrumentID,Instrument.InstrumentID);
+		strcpy(quote.ExchangeID,Instrument.ExchangeID);
 		if(strlen(Instrument.InstrumentName))
-			strcpy(quote.product_name,Instrument.InstrumentName);
+			strcpy(quote.Instrument.InstrumentName,Instrument.InstrumentName);
 		else
-			strcpy(quote.product_name, Instrument.InstrumentID);
+			strcpy(quote.Instrument.InstrumentName, Instrument.InstrumentID);
 		if(Instrument.PriceTick>=1)
 			quote.precision=0;
 		else if(Instrument.PriceTick>=0.1)
@@ -8326,9 +8308,9 @@ void CTradeRsp::HandleRspQryInstrument(CThostFtdcInstrumentField& Instrument, CT
 	int r = 0;
 
 	memset(&Req, 0x00, sizeof(Req));
-	strcpy(Req.BrokerID, broker);
-	strcpy(Req.InvestorID, user);
-	while ((r = m_pTradeReq->ReqQryInvestorPosition(&Req, m_nTradeRequestID++)) == -2 || r == -3)
+	strcpy(Req.BrokerID, BrokerID);
+	strcpy(Req.InvestorID, UserID);
+	while ((r = m_pTradeReq->ReqQryInvestorPosition(&Req, 0)) == -2 || r == -3)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
@@ -8364,9 +8346,9 @@ void CTradeRsp::HandleRspQryOrder(CThostFtdcOrderField& Order, CThostFtdcRspInfo
 	int r=0;
 	
 	memset(&Req,0x00,sizeof(Req));
-	strcpy(Req.BrokerID,broker);
-	strcpy(Req.InvestorID,user);
-	while((r=m_pTradeReq->ReqQryTrade(&Req,m_nTradeRequestID++))==-2 || r==-3)
+	strcpy(Req.BrokerID,BrokerID);
+	strcpy(Req.InvestorID,UserID);
+	while((r=m_pTradeReq->ReqQryTrade(&Req,0))==-2 || r==-3)
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 void CTradeRsp::HandleRspQryTrade(CThostFtdcTradeField& Trade, CThostFtdcRspInfoField& RspInfo, int nRequestID, bool bIsLast)
@@ -8405,12 +8387,12 @@ void CTradeRsp::HandleRspOrderInsert(CThostFtdcInputOrderField& InputOrder, CTho
 		status_print("报单失败:%s",RspInfo.ErrorMsg);
 		std::vector<CThostFtdcOrderField>::iterator iter;
 		for(iter=vOrders.begin();iter!=vOrders.end();iter++){
-			if(iter->FrontID==TradeFrontID && iter->SessionID==TradeSessionID && strcmp(iter->OrderRef,InputOrder.OrderRef)==0){
+			if(iter->FrontID==FrontID && iter->SessionID==SessionID && strcmp(iter->OrderRef,InputOrder.OrderRef)==0){
 				if(iter->OrderStatus==THOST_FTDC_OST_Canceled)	// 如果已经撤消,则不再重复处理
 					break;
 				std::vector<stPosition_t>::iterator iterPosi;
 				for(iterPosi=vPositions.begin();iterPosi!=vPositions.end();iterPosi++){
-					if(strcmp(InputOrder.InvestorID,iterPosi->AccID)==0 && strcmp(InputOrder.InstrumentID,iterPosi->InstrumentID)==0)
+					if(strcmp(InputOrder.InvestorID,iterPosi->InvestorID)==0 && strcmp(InputOrder.InstrumentID,iterPosi->InstrumentID)==0)
 						break;
 				}
 				if(iterPosi!=vPositions.end()){  // 本Session中发出的定单肯定会有持仓记录
@@ -8509,24 +8491,22 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 	status_print("查询持仓成功.");
 
 	// 清空持仓
-	positionlist_reset(user);
+	positionlist_reset(UserID);
 
 	// 通过持仓信息取得昨仓
 	std::vector<CThostFtdcInvestorPositionField>::iterator iterInvestorPosition;
 	std::vector<stPosition_t>::iterator iter;
 	for(iterInvestorPosition=vInvestorPositions.begin();iterInvestorPosition!=vInvestorPositions.end();iterInvestorPosition++){
-		if(strcmp(iterInvestorPosition->InvestorID,user)!=0)
-			continue;
 		for(iter=vPositions.begin();iter!=vPositions.end();iter++){
-			if(strcmp(iterInvestorPosition->InvestorID,iter->AccID)==0 && strcmp(iterInvestorPosition->InstrumentID,iter->InstrumentID)==0){
+			if(strcmp(iterInvestorPosition->InstrumentID,iter->InstrumentID)==0){
 				if(iterInvestorPosition->PosiDirection==THOST_FTDC_PD_Long){
 					iter->AvgBuyPrice = iterInvestorPosition->PreSettlementPrice;
-					iter->BuyVolume+=iterInvestorPosition->YdPosition;
-					iter->Volume+=iterInvestorPosition->YdPosition;
+					iter->BuyVolume = iterInvestorPosition->YdPosition;
+					iter->Volume += iterInvestorPosition->YdPosition;
 				}else{
 					iter->AvgSellPrice = iterInvestorPosition->PreSettlementPrice;
-					iter->SellVolume+=iterInvestorPosition->YdPosition;
-					iter->Volume-=iterInvestorPosition->YdPosition;
+					iter->SellVolume = iterInvestorPosition->YdPosition;
+					iter->Volume -= iterInvestorPosition->YdPosition;
 				}
 				iter->Price = iterInvestorPosition->PreSettlementPrice;
 				break;
@@ -8537,22 +8517,22 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 			memset(&Posi,0x00,sizeof(Posi));
 			strcpy(Posi.InstrumentID,iterInvestorPosition->InstrumentID);
 			strcpy(Posi.BrokerID,iterInvestorPosition->BrokerID);
-			strcpy(Posi.AccID,iterInvestorPosition->InvestorID);
+			strcpy(Posi.InvestorID,iterInvestorPosition->InvestorID);
 			for(size_t i=0;i<vquotes.size();i++){
-				if(strcmp(Posi.InstrumentID,vquotes[i].product_id)==0){
-					strcpy(Posi.ExchangeID,vquotes[i].exchange_id);
+				if(strcmp(Posi.InstrumentID,vquotes[i].InstrumentID)==0){
+					strcpy(Posi.ExchangeID,vquotes[i].ExchangeID);
 					break;
 				}
 			}
 
 			if(iterInvestorPosition->PosiDirection==THOST_FTDC_PD_Long){
 				Posi.AvgBuyPrice = iterInvestorPosition->PreSettlementPrice;
-				Posi.BuyVolume+=iterInvestorPosition->YdPosition;
-				Posi.Volume+=iterInvestorPosition->YdPosition;
+				Posi.BuyVolume = iterInvestorPosition->YdPosition;
+				Posi.Volume += iterInvestorPosition->YdPosition;
 			}else{
 				Posi.AvgSellPrice = iterInvestorPosition->PreSettlementPrice;
-				Posi.SellVolume+=iterInvestorPosition->YdPosition;
-				Posi.Volume-=iterInvestorPosition->YdPosition;
+				Posi.SellVolume = iterInvestorPosition->YdPosition;
+				Posi.Volume -= iterInvestorPosition->YdPosition;
 			}
 			Posi.Price = iterInvestorPosition->PreSettlementPrice;
 			mPositionIndex[Posi.InstrumentID] = vPositions.size();
@@ -8561,24 +8541,13 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 	}
 
 	// 删除vInvestorPositions中相应投资者的持仓信息
-	for(iterInvestorPosition=vInvestorPositions.begin();iterInvestorPosition!=vInvestorPositions.end();){
-		if(strcmp(iterInvestorPosition->InvestorID,user)==0){
-			vInvestorPositions.erase(iterInvestorPosition);
-			iterInvestorPosition=vInvestorPositions.begin();
-			continue;
-		}else{
-			iterInvestorPosition++;
-		}
-	}
-	
+	vInvestorPositions.clear();
 
 	// 通过成交明细更新持仓
 	std::vector<CThostFtdcTradeField>::iterator iterTrade;
 	for(iterTrade=vFilledOrders.begin();iterTrade!=vFilledOrders.end();iterTrade++){
-		if(strcmp(iterTrade->InvestorID,user)!=0)
-			continue;
 		for(iter=vPositions.begin();iter!=vPositions.end();iter++){
-			if(strcmp(iterTrade->InvestorID,iter->AccID)==0 && strcmp(iter->InstrumentID,iterTrade->InstrumentID)==0){
+			if(strcmp(iter->InstrumentID,iterTrade->InstrumentID)==0){
 				if(iterTrade->Direction==THOST_FTDC_D_Buy){
 					if(iterTrade->OffsetFlag==THOST_FTDC_OF_Open){
 						iter->AvgBuyPrice = (iter->AvgBuyPrice * iter->BuyVolume + iterTrade->Price * iterTrade->Volume) / (iter->BuyVolume + iterTrade->Volume);
@@ -8618,7 +8587,7 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 			memset(&Posi,0x00,sizeof(Posi));
 			strcpy(Posi.InstrumentID,iterTrade->InstrumentID);
 			strcpy(Posi.BrokerID,iterTrade->BrokerID);
-			strcpy(Posi.AccID,iterTrade->InvestorID);
+			strcpy(Posi.InvestorID,iterTrade->InvestorID);
 			strcpy(Posi.ExchangeID,iterTrade->ExchangeID);
 			if(iterTrade->Direction==THOST_FTDC_D_Buy){
 				if(iterTrade->OffsetFlag==THOST_FTDC_OF_Open){
@@ -8660,12 +8629,12 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 	// 通过委托明细冻结持仓
 	std::vector<CThostFtdcOrderField>::iterator iterOrder;
 	for(iterOrder=vOrders.begin();iterOrder!=vOrders.end();iterOrder++){
-		if(strcmp(iterOrder->InvestorID,user)!=0)
+		if(strcmp(iterOrder->InvestorID,UserID)!=0)
 			continue;
 		if(iterOrder->OrderStatus!=THOST_FTDC_OST_Canceled && iterOrder->OrderStatus!=THOST_FTDC_OST_AllTraded){
 			std::vector<stPosition_t>::iterator iterPosi;
 			for(iterPosi=vPositions.begin();iterPosi!=vPositions.end();iterPosi++){
-				if(strcmp(iterOrder->InvestorID,iterPosi->AccID)==0 && strcmp(iterOrder->InstrumentID,iterPosi->InstrumentID)==0)
+				if(strcmp(iterOrder->InvestorID,iterPosi->InvestorID)==0 && strcmp(iterOrder->InstrumentID,iterPosi->InstrumentID)==0)
 					break;
 			}
 			if(iterPosi!=vPositions.end()){
@@ -8711,7 +8680,7 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 					memset(&Posi,0x00,sizeof(Posi));
 					strcpy(Posi.InstrumentID,iterOrder->InstrumentID);
 					strcpy(Posi.BrokerID,iterOrder->BrokerID);
-					strcpy(Posi.AccID,iterOrder->InvestorID);
+					strcpy(Posi.InvestorID,iterOrder->InvestorID);
 					strcpy(Posi.ExchangeID,iterOrder->ExchangeID);
 					switch(iterOrder->OrderStatus){
 					case THOST_FTDC_OST_PartTradedQueueing:	//部分成交冻结相应的仓位
@@ -8779,20 +8748,10 @@ void CTradeRsp::HandleRspQryTradingAccount(CThostFtdcTradingAccountField& Tradin
 	}
 	//status_print("查询资金成功.");
 
-	std::vector<stAccount_t>::iterator iter;
+	std::vector<CThostFtdcTradingAccountField>::iterator iter;
 	for(iter=vAccounts.begin();iter!=vAccounts.end();iter++){
-		if(strcmp(TradingAccount.AccountID,iter->AccID)==0){
-			iter->PreBalance=TradingAccount.PreBalance;
-			iter->MoneyIn=TradingAccount.Deposit;
-			iter->MoneyOut=TradingAccount.Withdraw;
-			iter->FrozenMargin=TradingAccount.FrozenMargin;
-			iter->MoneyFrozen=TradingAccount.FrozenCash;
-			iter->FeeFrozen=TradingAccount.FrozenCommission;
-			iter->Margin=TradingAccount.CurrMargin;
-			iter->Fee=TradingAccount.Commission;
-			iter->CloseProfitLoss=TradingAccount.CloseProfit;
-			iter->FloatProfitLoss=TradingAccount.PositionProfit;
-			iter->BalanceAvailable=TradingAccount.Available;
+		if(strcmp(TradingAccount.AccountID,iter->AccountID)==0){
+			memcpy(&(*iter), &TradingAccount, sizeof(TradingAccount));
 			break;
 		}
 	}
@@ -8847,7 +8806,7 @@ void CTradeRsp::HandleRtnOrder(CThostFtdcOrderField& Order)
 			if(Order.FrontID==iter->FrontID && Order.SessionID==iter->SessionID && strcmp(Order.OrderRef,iter->OrderRef)==0){
 				if(iter->OrderStatus!=THOST_FTDC_OST_Canceled && iter->OrderStatus!=THOST_FTDC_OST_AllTraded){
 					for(iterPosi=vPositions.begin();iterPosi!=vPositions.end();iterPosi++){
-						if(strcmp(Order.InvestorID,iterPosi->AccID)==0 && strcmp(Order.InstrumentID,iterPosi->InstrumentID)==0)
+						if(strcmp(Order.InvestorID,iterPosi->InvestorID)==0 && strcmp(Order.InstrumentID,iterPosi->InstrumentID)==0)
 							break;
 					}
 					if(iterPosi!=vPositions.end()){
@@ -8966,10 +8925,10 @@ void CTradeRsp::HandleRtnOrder(CThostFtdcOrderField& Order)
 					memset(&Posi,0x00,sizeof(Posi));
 					strcpy(Posi.InstrumentID,Order.InstrumentID);
 					strcpy(Posi.BrokerID,Order.BrokerID);
-					strcpy(Posi.AccID,Order.InvestorID);
+					strcpy(Posi.InvestorID,Order.InvestorID);
 					for(size_t i=0;i<vquotes.size();i++){
-						if(strcmp(Posi.InstrumentID,vquotes[i].product_id)==0){
-							strcpy(Posi.ExchangeID,vquotes[i].exchange_id);
+						if(strcmp(Posi.InstrumentID,vquotes[i].InstrumentID)==0){
+							strcpy(Posi.ExchangeID,vquotes[i].ExchangeID);
 							break;
 						}
 					}
@@ -9100,7 +9059,7 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 			memset(&Posi,0x00,sizeof(Posi));
 			strcpy(Posi.InstrumentID,Trade.InstrumentID);
 			strcpy(Posi.BrokerID,Trade.BrokerID);
-			strcpy(Posi.AccID,Trade.InvestorID);
+			strcpy(Posi.InvestorID,Trade.InvestorID);
 			strcpy(Posi.ExchangeID,Trade.ExchangeID);
 			if(Trade.Direction==THOST_FTDC_D_Buy){
 				if(Trade.OffsetFlag==THOST_FTDC_OF_Open){
@@ -9158,12 +9117,12 @@ void CTradeRsp::HandleErrRtnOrderInsert(CThostFtdcInputOrderField& InputOrder, C
 		status_print("报单拒绝:%s",RspInfo.ErrorMsg);
 		std::vector<CThostFtdcOrderField>::iterator iter;
 		for(iter=vOrders.begin();iter!=vOrders.end();iter++){
-			if(iter->FrontID==TradeFrontID && iter->SessionID==TradeSessionID && strcmp(iter->OrderRef,InputOrder.OrderRef)==0){
+			if(iter->FrontID==FrontID && iter->SessionID==SessionID && strcmp(iter->OrderRef,InputOrder.OrderRef)==0){
 				if(iter->OrderStatus==THOST_FTDC_OST_Canceled)	// 如果已经撤消,则不再重复处理
 					break;
 				std::vector<stPosition_t>::iterator iterPosi;
 				for(iterPosi=vPositions.begin();iterPosi!=vPositions.end();iterPosi++){
-					if(strcmp(InputOrder.InvestorID,iterPosi->AccID)==0 && strcmp(InputOrder.InstrumentID,iterPosi->InstrumentID)==0)
+					if(strcmp(InputOrder.InvestorID,iterPosi->InvestorID)==0 && strcmp(InputOrder.InstrumentID,iterPosi->InstrumentID)==0)
 						break;
 				}
 				if(iterPosi!=vPositions.end()){  // 本Session中发出的定单肯定会有持仓记录
@@ -9251,9 +9210,9 @@ void CMarketRsp::HandleFrontConnected()
 		vquotes[i].subscribed=false;
 
 	memset(&Req,0x00,sizeof(Req));
-	strcpy(Req.BrokerID,broker);
-	strcpy(Req.UserID,user);
-	strcpy(Req.Password,passwd);
+	strcpy(Req.BrokerID,BrokerID);
+	strcpy(Req.UserID,UserID);
+	strcpy(Req.Password,Password);
 	//sprintf(Req.UserProductInfo,"%s %s",APP_ID,APP_VERSION);
 	m_pMarketReq->ReqUserLogin(&Req,0);
 }
@@ -9331,7 +9290,7 @@ void CMarketRsp::HandleRtnDepthMarketData(CThostFtdcDepthMarketDataField& DepthM
 	
 	if(vquotes[i].DepthMarketData.Volume!=DepthMarketData.Volume)
 		vquotes[i].trade_volume=DepthMarketData.Volume-vquotes[i].DepthMarketData.Volume;
-	if(strcmp(vquotes[i].exchange_id,"CZCE")!=0)
+	if(strcmp(vquotes[i].ExchangeID,"CZCE")!=0)
 		vquotes[i].DepthMarketData.AveragePrice/=vquotes[i].Instrument.VolumeMultiple;
 	memcpy(&vquotes[i].DepthMarketData, &DepthMarketData, sizeof(DepthMarketData));
 
@@ -9340,7 +9299,7 @@ void CMarketRsp::HandleRtnDepthMarketData(CThostFtdcDepthMarketDataField& DepthM
 		display_quotation(i);
 		break;
 	case WIN_ORDER:
-		order_display_quotation(vquotes[i].product_id);
+		order_display_quotation(vquotes[i].InstrumentID);
 	default:
 		break;
 	}
@@ -9460,13 +9419,13 @@ void corner_display_matches()
 // 	if(strlen(strsearching)==0)
 // 		return;
 	for(i=corner_curr_pos,j=0;i<vquotes.size() && j<5;i++){
-		if(strnicmp(vquotes[i].product_id,strsearching,strlen(strsearching))==0){
+		if(strnicmp(vquotes[i].InstrumentID,strsearching,strlen(strsearching))==0){
 			if(j==0 && strlen(strsearching)>0){
-				mvwprintw(corner_win,j+1,strlen(strsearching)+1,"%s",vquotes[i].product_id+strlen(strsearching));
-				mvwchgat(corner_win,j+1,strlen(strsearching)+1,strlen(vquotes[i].product_id)-strlen(strsearching),A_REVERSE,0,NULL);
-				strcpy(strmatch,vquotes[i].product_id);
+				mvwprintw(corner_win,j+1,strlen(strsearching)+1,"%s",vquotes[i].InstrumentID+strlen(strsearching));
+				mvwchgat(corner_win,j+1,strlen(strsearching)+1,strlen(vquotes[i].InstrumentID)-strlen(strsearching),A_REVERSE,0,NULL);
+				strcpy(strmatch,vquotes[i].InstrumentID);
 			}
-			mvwprintw(corner_win,j+2,1,"%s",vquotes[i].product_id);
+			mvwprintw(corner_win,j+2,1,"%s",vquotes[i].InstrumentID);
 			j++;
 		}
 	}
@@ -9484,7 +9443,7 @@ void corner_choose_item()
 		size_t i,j;
 		
 		for(i=corner_curr_pos,j=0;i<vquotes.size();i++){
-			if(strncmp(vquotes[i].product_id,strsearching,strlen(strsearching))==0){
+			if(strncmp(vquotes[i].InstrumentID,strsearching,strlen(strsearching))==0){
 				j++;
 				if(j==corner_curr_line){	// found
 					corner_destroy();
@@ -9498,7 +9457,7 @@ void corner_choose_item()
 	}else{// unselected
 		
 		for(size_t i=0;i<vquotes.size();i++){
-			if(strcmp(vquotes[i].product_id,strmatch)==0){	// found
+			if(strcmp(vquotes[i].InstrumentID,strmatch)==0){	// found
 				corner_destroy();
 				refresh_screen();
 				focus_quotation(i);
@@ -9626,7 +9585,7 @@ void corner_move_forward_1_line()
 		size_t i;
 		
 		for(i=corner_curr_pos;i<vquotes.size();i++){
-			if(strncmp(vquotes[i].product_id,strsearching,strlen(strsearching))==0)
+			if(strncmp(vquotes[i].InstrumentID,strsearching,strlen(strsearching))==0)
 				break;
 		}
 		if(i==vquotes.size())
@@ -9640,7 +9599,7 @@ void corner_move_forward_1_line()
 	size_t i,j;
 	
 	for(i=corner_curr_pos,j=0;i<vquotes.size() && j<=corner_curr_line;i++){
-		if(strncmp(vquotes[i].product_id,strsearching,strlen(strsearching))==0)
+		if(strncmp(vquotes[i].InstrumentID,strsearching,strlen(strsearching))==0)
 			j++;
 	}
 	if(j<=corner_curr_line)	// Already bottom
@@ -9652,7 +9611,7 @@ void corner_move_forward_1_line()
 		size_t i,j,next_pos;
 		
 		for(i=corner_curr_pos,j=0;i<vquotes.size();i++){
-			if(strncmp(vquotes[i].product_id,strsearching,strlen(strsearching))==0){
+			if(strncmp(vquotes[i].InstrumentID,strsearching,strlen(strsearching))==0){
 				j++;
 				if(j==2)
 					next_pos=i;
@@ -9673,7 +9632,7 @@ void corner_move_backward_1_line()
 		size_t i;
 		
 		for(i=corner_curr_pos;i<vquotes.size();i++){
-			if(strncmp(vquotes[i].product_id,strsearching,strlen(strsearching))==0)
+			if(strncmp(vquotes[i].InstrumentID,strsearching,strlen(strsearching))==0)
 				break;
 		}
 		if(i==vquotes.size())
@@ -9688,7 +9647,7 @@ void corner_move_backward_1_line()
 		int i;
 		
 		for(i=corner_curr_pos-1;i>=0;i--){
-			if(strncmp(vquotes[i].product_id,strsearching,strlen(strsearching))==0)
+			if(strncmp(vquotes[i].InstrumentID,strsearching,strlen(strsearching))==0)
 				break;
 		}
 		if(i<0)	// Already top
@@ -9780,13 +9739,13 @@ void order_corner_display_matches()
 // 	if(strlen(strsearching)==0)
 // 		return;
 	for(i=order_corner_curr_pos,j=0;i<vquotes.size() && j<5;i++){
-		if(strnicmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0){
+		if(strnicmp(vquotes[i].InstrumentID,order_strsearching,strlen(order_strsearching))==0){
 			if(j==0 && strlen(order_strsearching)>0){
-				mvwprintw(order_corner_win,j+1,strlen(order_strsearching)+1,"%s",vquotes[i].product_id+strlen(order_strsearching));
-				mvwchgat(order_corner_win,j+1,strlen(order_strsearching)+1,strlen(vquotes[i].product_id)-strlen(order_strsearching),A_REVERSE,0,NULL);
-				strcpy(order_strmatch,vquotes[i].product_id);
+				mvwprintw(order_corner_win,j+1,strlen(order_strsearching)+1,"%s",vquotes[i].InstrumentID+strlen(order_strsearching));
+				mvwchgat(order_corner_win,j+1,strlen(order_strsearching)+1,strlen(vquotes[i].InstrumentID)-strlen(order_strsearching),A_REVERSE,0,NULL);
+				strcpy(order_strmatch,vquotes[i].InstrumentID);
 			}
-			mvwprintw(order_corner_win,j+2,1,"%s",vquotes[i].product_id);
+			mvwprintw(order_corner_win,j+2,1,"%s",vquotes[i].InstrumentID);
 			j++;
 		}
 	}
@@ -9804,10 +9763,10 @@ void order_corner_choose_item()
 		size_t i,j;
 		
 		for(i=order_corner_curr_pos,j=0;i<vquotes.size();i++){
-			if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0){
+			if(strncmp(vquotes[i].InstrumentID,order_strsearching,strlen(order_strsearching))==0){
 				j++;
 				if(j==order_corner_curr_line){	// found
-					strcpy(order_last_symbol,vquotes[order_symbol_index].product_id);
+					strcpy(order_last_symbol,vquotes[order_symbol_index].InstrumentID);
 					order_corner_destroy();
 					order_symbol_index=i;
 					order_curr_price=0;
@@ -9821,8 +9780,8 @@ void order_corner_choose_item()
 		}
 	}else{// unselected
 		for(size_t i=0;i<vquotes.size();i++){
-			if(strcmp(vquotes[i].product_id,order_strmatch)==0){	// found
-				strcpy(order_last_symbol,vquotes[order_symbol_index].product_id);
+			if(strcmp(vquotes[i].InstrumentID,order_strmatch)==0){	// found
+				strcpy(order_last_symbol,vquotes[order_symbol_index].InstrumentID);
 				order_corner_destroy();
 				order_symbol_index=i;
 				order_curr_price=0;
@@ -9954,7 +9913,7 @@ void order_corner_move_forward_1_line()
 		size_t i;
 		
 		for(i=order_corner_curr_pos;i<vquotes.size();i++){
-			if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0)
+			if(strncmp(vquotes[i].InstrumentID,order_strsearching,strlen(order_strsearching))==0)
 				break;
 		}
 		if(i==vquotes.size())
@@ -9969,7 +9928,7 @@ void order_corner_move_forward_1_line()
 	
 	
 	for(i=order_corner_curr_pos,j=0;i<vquotes.size() && j<=order_corner_curr_line;i++){
-		if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0)
+		if(strncmp(vquotes[i].InstrumentID,order_strsearching,strlen(order_strsearching))==0)
 			j++;
 	}
 	
@@ -9982,7 +9941,7 @@ void order_corner_move_forward_1_line()
 		size_t i,j,next_pos;
 		
 		for(i=order_corner_curr_pos,j=0;i<vquotes.size();i++){
-			if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0){
+			if(strncmp(vquotes[i].InstrumentID,order_strsearching,strlen(order_strsearching))==0){
 				j++;
 				if(j==2)
 					next_pos=i;
@@ -10004,7 +9963,7 @@ void order_corner_move_backward_1_line()
 		size_t i;
 		
 		for(i=order_corner_curr_pos;i<vquotes.size();i++){
-			if(strncmp(vquotes[i].product_id,order_strsearching,strlen(order_strsearching))==0)
+			if(strncmp(vquotes[i].InstrumentID,order_strsearching,strlen(order_strsearching))==0)
 				break;
 		}
 		if(i==vquotes.size())
@@ -10020,7 +9979,7 @@ void order_corner_move_backward_1_line()
 		int i;
 		
 		for (i = order_corner_curr_pos - 1; i >= 0; i--) {
-			if (strncmp(vquotes[i].product_id, order_strsearching, strlen(order_strsearching)) == 0)
+			if (strncmp(vquotes[i].InstrumentID, order_strsearching, strlen(order_strsearching)) == 0)
 				break;
 		}
 		if(i<0)	// Already top
