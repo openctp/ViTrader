@@ -1923,118 +1923,12 @@ void order_display_status()
 		break;
 	}
 
-	//int pos,max_ticks;
-	//if(order_symbol_index<0){
-	//	pos=0;
-	//	max_ticks=0;
-	//}else{
-	//	int precision=vquotes[order_symbol_index].precision;
-	//	double high_limit=vquotes[order_symbol_index].DepthMarketData.UpperLimitPrice;
-	//	double low_limit=vquotes[order_symbol_index].DepthMarketData.LowerLimitPrice;
-	//	double PriceTick=vquotes[order_symbol_index].Instrument.PriceTick;
-	//	double buy_price=vquotes[order_symbol_index].DepthMarketData.BidPrice1;
-	//	int buy_quantity=vquotes[order_symbol_index].buy_quantity;
-	//	double sell_price=vquotes[order_symbol_index].DepthMarketData.AskPrice1;
-	//	int sell_quantity=vquotes[order_symbol_index].sell_quantity;
-	//	double close_price=vquotes[order_symbol_index].price;
-	//	double prev_settle=vquotes[order_symbol_index].prev_settle;
-	//	double error_amount=1.0/pow(10.0,vquotes[order_symbol_index].precision)/2.0;
-
-	//	if(high_limit==DBL_MAX || high_limit==0 || low_limit==DBL_MAX || low_limit==0){
-	//		pos=0;
-	//		max_ticks=0;
-	//	}else{
-	//		if(order_curr_price==0){
-	//			pos=0;
-	//			order_curr_price=high_limit;
-	//		}else if(order_curr_price>=high_limit+error_amount || order_curr_price<=low_limit-error_amount){
-	//			pos=0;
-	//			order_curr_price=high_limit;
-	//		}else{
-	//			pos=(high_limit-order_curr_price)/PriceTick+1+0.5;
-	//		}
-	//		max_ticks=(high_limit-low_limit)/PriceTick+1+0.5;
-	//	}
-	//}
-	//
-	//mvprintw(order_max_lines+2,0,"ÕÊ»§:%s",order_curr_accname);
-
-	//int buy_quantity=0,sell_quantity=0,buying_quantity=0,selling_quantity=0,canceling_buy_quantity=0,canceling_sell_quantity=0;
-	//
-	//std::vector<CThostFtdcOrderField>::iterator iterOrder;
-	//std::vector<CThostFtdcInputOrderActionField>::iterator iterCanceling;
-	//for(iterOrder=vOrders.begin();iterOrder!=vOrders.end();iterOrder++){
-	//	if(strcmp(iterOrder->InvestorID,order_curr_accname)!=0 || strcmp(iterOrder->InstrumentID,vquotes[order_symbol_index].InstrumentID)!=0 || iterOrder->OrderStatus==THOST_FTDC_OST_AllTraded || iterOrder->OrderStatus==THOST_FTDC_OST_Canceled)
-	//		continue;
-	//	if(iterOrder->OrderStatus==THOST_FTDC_OST_NoTradeQueueing || iterOrder->OrderStatus==THOST_FTDC_OST_PartTradedNotQueueing){
-	//		if(iterOrder->Direction==THOST_FTDC_D_Buy)
-	//			buy_quantity+=iterOrder->VolumeTotal;
-	//		else
-	//			sell_quantity+=iterOrder->VolumeTotal;
-	//	}else{
-	//		if(iterOrder->Direction==THOST_FTDC_D_Buy)
-	//			buying_quantity+=iterOrder->VolumeTotal;
-	//		else
-	//			selling_quantity+=iterOrder->VolumeTotal;
-	//	}
-	//	
-	//	// Canceling
-	//	for(iterCanceling=vCancelingOrders.begin();iterCanceling!=vCancelingOrders.end();iterCanceling++){
-	//		if(strcmp(iterCanceling->InstrumentID,iterOrder->InstrumentID)==0 && iterCanceling->FrontID==iterOrder->FrontID && iterCanceling->SessionID==iterOrder->SessionID && strcmp(iterCanceling->OrderRef,iterOrder->OrderRef)==0){
-	//			if(iterOrder->Direction==THOST_FTDC_D_Buy)
-	//				canceling_buy_quantity+=iterOrder->VolumeTotal;
-	//			else
-	//				canceling_sell_quantity+=iterOrder->VolumeTotal;
-	//			break;
-	//		}
-	//	}
-	//}
-	//char strbuyorders[100],strsellorders[100];
-	//memset(strbuyorders,0x00,sizeof(strbuyorders));
-	//memset(strsellorders,0x00,sizeof(strsellorders));
-	//if(buy_quantity>0 || buying_quantity>0 || canceling_buy_quantity>0){
-	//	if(buy_quantity>0){
-	//		sprintf(strbuyorders,"%d",buy_quantity);
-	//	}
-	//	if(buying_quantity>0){
-	//		sprintf(strbuyorders+strlen(strbuyorders),"(%d",buying_quantity);
-	//		if(canceling_buy_quantity>0){
-	//			sprintf(strbuyorders+strlen(strbuyorders),"/-%d",canceling_buy_quantity);
-	//		}
-	//		strcat(strbuyorders,")");
-	//	}else{
-	//		if(canceling_buy_quantity>0){
-	//			sprintf(strbuyorders+strlen(strbuyorders),"(-%d)",canceling_buy_quantity);
-	//		}
-	//	}
-	//}
-	//if(strlen(strbuyorders)==0)
-	//	strcpy(strbuyorders,"0");
-
-	//if(sell_quantity>0 || selling_quantity>0 || canceling_sell_quantity>0){
-	//	if(sell_quantity>0){
-	//		sprintf(strsellorders,"%d",sell_quantity);
-	//	}
-	//	if(selling_quantity>0){
-	//		sprintf(strsellorders+strlen(strsellorders),"(%d",selling_quantity);
-	//		if(canceling_sell_quantity>0){
-	//			sprintf(strsellorders+strlen(strsellorders),"/-%d",canceling_sell_quantity);
-	//		}
-	//		strcat(strsellorders,")");
-	//	}else{
-	//		if(canceling_sell_quantity>0){
-	//			sprintf(strsellorders+strlen(strsellorders),"(-%d)",canceling_sell_quantity);
-	//		}
-	//	}
-	//}
-	//if(strlen(strsellorders)==0)
-	//	strcpy(strsellorders,"0");
 	move(y - 1, 0);
 	clrtoeol();
 	mvprintw(y - 1, 15, "%s", status_message);
 	mvprintw(y - 1, x - 25, "%s %s", pTradeRsp->UserID, tradetime);
-	//mvprintw(y-1,x-25,"%s,%s",strbuyorders,strsellorders);
 }
+
 void column_settings_display_status()
 {
 	int y,x;
