@@ -17,32 +17,22 @@ TextTrader支持CTP期货交易柜台，也支持采用CTP兼容接口的其它�
 
 ### 编译
 Windows：
+
 build/win32目录下，进入命令行执行nmake，或打开VS2019工程编译。
 
 Linux：
+
 build/linux目录下，执行make
 
 MacOSX:
+
 build/MacOSX目录下，执行make，或打开xcode工程编译。
 
 ### 安装包
-本项目Releases目录下有各平台已编译好的程序，可直接下载使用，均为绿色版，不需要安装。
+已编译好Win32、Linux、Mac版本，绿色无需安装，如需要接入openctp、华鑫、中泰等柜台需要更换dll，各柜台CTPAPI的dll下载链接:[dll下载](http://121.37.80.177:50080/download.html)。
 
-已发布的各版本说明：
-- Releases/Linux  各柜台的Linux版本
-- Releases/Linux/TextTrader  Linux的CTP版本
-- Releases/Linux/TextTraderTTS  [CTP开放平台](https://github.com/krenx1983/openctp)的Linux版本（交易时段与实盘一致的环境）
-- Releases/Linux/TextTraderSTP  [N视界模拟平台](https://n-sight.com.cn)的Linux版本（7x24小时运行的环境）
-- Releases/MacOSX  各柜台的MacOSX版本
-- Releases  各柜台的win32版本
-- Releases/TextTrader.exe  win32的CTP版本
-- Releases/simnow  [simnow模拟平台](https://www.simnow.com.cn/)的版本（交易时段与实盘一致的环境）
-- Releases/simnow7x24  [simnow模拟平台](https://www.simnow.com.cn/)的版本（7x24小时运行的环境）
-- Releases/openctp  [CTP开放平台](https://github.com/krenx1983/openctp)的版本（交易时段与实盘一致的环境）
-- Releases/openctp7x24  [CTP开放平台](https://github.com/krenx1983/openctp)的版本（7x24小时运行的环境）
-- Releases/N视界CTP  华鑫证券[N视界模拟平台](https://n-sight.com.cn)的期货版本（7x24小时运行的环境）
-- Releases/N视界证券  华鑫证券[N视界模拟平台](https://n-sight.com.cn)的证券版本（7x24小时运行的环境）
-- 
+下载链接:[TextTrader下载](http://121.37.80.177:50080/Download/TextTrader/TextTrader.zip)
+
 ### 移动命令（所有窗口通用）： 
 
 - ​	上下左右：j、k、h、l及四个方向键
