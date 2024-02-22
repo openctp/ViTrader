@@ -22,6 +22,9 @@
 #define CONNECTION_STATUS_LOGINOK		2
 #define CONNECTION_STATUS_LOGINFAILED	3
 
+#define WORKING_STATUS_NONE		0
+#define WORKING_STATUS_WORKING	1
+
 class CTradeRsp:public CThostFtdcTraderSpi
 {
 public:
@@ -115,7 +118,7 @@ public:
 	TThostFtdcAuthCodeType	AuthCode;
 	TThostFtdcAppIDType	AppID;
 	std::vector<CThostFtdcOrderField> m_mMovingOrders;
-
+	std::vector<CThostFtdcInvestorPositionField> m_vInvestorPositions;
 };
 class CMarketRsp:public CThostFtdcMdSpi
 {
@@ -199,7 +202,6 @@ typedef struct {
 // Basic
 int subscribe(size_t index);
 int unsubscribe(size_t index);
-const char *apistrerror(int e);
 void init_screen();
 void on_key_pressed(int ch);
 void time_thread();
@@ -209,6 +211,8 @@ void HandleStatusClear();
 double GetProfitLoss(const char* InstrumentID);
 double GetBuyProfitLoss(const char* InstrumentID);
 double GetSellProfitLoss(const char* InstrumentID);
+stPosition_t& GetPosition(const char* InstrumentID);
+CThostFtdcInstrumentField& GetInstrument(const char* InstrumentID);
 
 // Main Board
 void refresh_screen();
@@ -377,7 +381,7 @@ void positionlist_display_positions();
 void positionlist_display_status();
 void positionlist_display_focus();
 void positionlist_redraw();
-void positionlist_reset(const char *UserID);
+void positionlist_reset();
 void positionlist_display_position(const char* szAccID, const char* szExchangeID, const char* szInstrumentID);
 int on_key_pressed_positionlist(int ch);
 int goto_mainboard_window_from_positionlist();
