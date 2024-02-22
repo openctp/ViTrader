@@ -199,6 +199,7 @@ void HandleStatusClear();
 double GetProfitLoss(const char* InstrumentID);
 double GetBuyProfitLoss(const char* InstrumentID);
 double GetSellProfitLoss(const char* InstrumentID);
+double GetPositionBalance(const char* InstrumentID);
 stPosition_t& GetPosition(const char* InstrumentID);
 CThostFtdcInstrumentField& GetInstrument(const char* InstrumentID);
 CThostFtdcDepthMarketDataField& GetDepthMarketData(const char* InstrumentID);

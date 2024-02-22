@@ -744,8 +744,8 @@ double GetBuyProfitLoss(const char* InstrumentID)
 	auto DepthMarketData = GetDepthMarketData(InstrumentID);
 	auto Position = GetPosition(InstrumentID);
 
-	double close_price = DepthMarketData.LastPrice;
-	double prev_settle = DepthMarketData.PreSettlementPrice;
+	double LastPrice = DepthMarketData.LastPrice;
+	double PreSettlementPrice = DepthMarketData.PreSettlementPrice;
 	int nPosi = 0, nBuyPosi = 0, nSellPosi = 0;
 	double AvgBuyPrice = 0, AvgSellPrice = 0;
 
@@ -756,8 +756,8 @@ double GetBuyProfitLoss(const char* InstrumentID)
 	AvgSellPrice = Position.AvgSellPrice;
 
 	double PL = 0;
-	if (nBuyPosi && close_price != DBL_MAX)
-		PL = (close_price - AvgBuyPrice) * nBuyPosi * Instrument.VolumeMultiple;
+	if (nBuyPosi && LastPrice != DBL_MAX)
+		PL = (LastPrice - AvgBuyPrice) * nBuyPosi * Instrument.VolumeMultiple;
 
 	return PL;
 }
@@ -768,8 +768,8 @@ double GetSellProfitLoss(const char* InstrumentID)
 	auto DepthMarketData = GetDepthMarketData(InstrumentID);
 	auto Position = GetPosition(InstrumentID);
 
-	double close_price = DepthMarketData.LastPrice;
-	double prev_settle = DepthMarketData.PreSettlementPrice;
+	double LastPrice = DepthMarketData.LastPrice;
+	double PreSettlementPrice = DepthMarketData.PreSettlementPrice;
 	int nPosi = 0, nBuyPosi = 0, nSellPosi = 0;
 	double AvgBuyPrice = 0, AvgSellPrice = 0;
 
@@ -780,10 +780,34 @@ double GetSellProfitLoss(const char* InstrumentID)
 	AvgSellPrice = Position.AvgSellPrice;
 
 	double PL = 0;
-	if (nSellPosi && close_price != DBL_MAX)
-		PL = (AvgSellPrice - close_price) * nSellPosi * Instrument.VolumeMultiple;
+	if (nSellPosi && LastPrice != DBL_MAX)
+		PL = (AvgSellPrice - LastPrice) * nSellPosi * Instrument.VolumeMultiple;
 
 	return PL;
+}
+
+double GetPositionBalance(const char* InstrumentID)
+{
+	auto Instrument = GetInstrument(InstrumentID);
+	auto DepthMarketData = GetDepthMarketData(InstrumentID);
+	auto Position = GetPosition(InstrumentID);
+
+	double LastPrice = DepthMarketData.LastPrice;
+	if (LastPrice == DBL_MAX)
+		LastPrice = DepthMarketData.PreSettlementPrice;
+	int nPosi = 0, nBuyPosi = 0, nSellPosi = 0;
+	double AvgBuyPrice = 0, AvgSellPrice = 0;
+
+	nPosi = Position.Volume;
+	nBuyPosi = Position.BuyVolume;
+	nSellPosi = Position.SellVolume;
+	AvgBuyPrice = Position.AvgBuyPrice;
+	AvgSellPrice = Position.AvgSellPrice;
+
+	double Balance = 0;
+	Balance = LastPrice * (nSellPosi+nBuyPosi) * Instrument.VolumeMultiple;
+
+	return Balance;
 }
 
 int GetPrecision(const char* InstrumentID)
@@ -2289,22 +2313,22 @@ void order_centralize_current_price()
 	double UpperLimitPrice=vDepthMarketDatas[order_symbol_index].UpperLimitPrice;
 	double LowerLimitPrice=vDepthMarketDatas[order_symbol_index].LowerLimitPrice;
 	double PriceTick=vInstruments[order_symbol_index].PriceTick;
-	double close_price=vDepthMarketDatas[order_symbol_index].LastPrice;
+	double LastPrice=vDepthMarketDatas[order_symbol_index].LastPrice;
 	double prev_close = vDepthMarketDatas[order_symbol_index].PreClosePrice;
-	double prev_settle=vDepthMarketDatas[order_symbol_index].PreSettlementPrice;
+	double PreSettlementPrice=vDepthMarketDatas[order_symbol_index].PreSettlementPrice;
 	double error_amount=1.0/pow(10.0,GetPrecision(vInstruments[order_symbol_index].InstrumentID))/2.0;
 	
 	if(UpperLimitPrice==DBL_MAX || LowerLimitPrice==DBL_MAX)
 		return;
-	order_curr_price = close_price;
+	order_curr_price = LastPrice;
 
 	if(order_curr_price == DBL_MAX){
-		// centralize to prev_settle
+		// centralize to PreSettlementPrice
 		order_curr_price= prev_close;
 	}
 	if (order_curr_price == DBL_MAX) {
-		// centralize to prev_settle
-		order_curr_price = prev_settle;
+		// centralize to PreSettlementPrice
+		order_curr_price = PreSettlementPrice;
 	}
 
 	if((order_page_top_price=order_curr_price+order_max_lines/2*PriceTick)>=UpperLimitPrice+error_amount)
@@ -2324,7 +2348,7 @@ int order_refresh_quote()
 	int buy_quantity=vDepthMarketDatas[i].BidVolume1;
 	double sell_price=vDepthMarketDatas[i].AskPrice1;
 	int sell_quantity=vDepthMarketDatas[i].AskVolume1;
-	double close_price=vDepthMarketDatas[i].LastPrice;
+	double LastPrice=vDepthMarketDatas[i].LastPrice;
 	int max_ticks=(UpperLimitPrice-LowerLimitPrice)/PriceTick+1+0.5;
 	double error_amount=1.0/pow(10.0,GetPrecision(vInstruments[order_symbol_index].InstrumentID))/2.0;
 	
@@ -2354,10 +2378,10 @@ int order_refresh_quote()
 			mvprintw(order_curr_pos_bid-order_curr_pos+2,33,"%10d",buy_quantity);
 	}
 	mvchgat(order_curr_line+1,0,-1,A_REVERSE,0,NULL);
-	if((UpperLimitPrice-close_price)/PriceTick-order_curr_pos+1+0.5==order_curr_line)
+	if((UpperLimitPrice-LastPrice)/PriceTick-order_curr_pos+1+0.5==order_curr_line)
 		mvchgat(order_curr_line+1,22,11,A_NORMAL,0,NULL);
-	else if((UpperLimitPrice-close_price)/PriceTick-order_curr_pos+1+0.5>=1 && (UpperLimitPrice-close_price)/PriceTick-order_curr_pos+1+0.5<=order_max_lines)
-		mvchgat((UpperLimitPrice-close_price)/PriceTick-order_curr_pos+1+1+0.5,22,11,A_REVERSE,0,NULL);
+	else if((UpperLimitPrice-LastPrice)/PriceTick-order_curr_pos+1+0.5>=1 && (UpperLimitPrice-LastPrice)/PriceTick-order_curr_pos+1+0.5<=order_max_lines)
+		mvchgat((UpperLimitPrice-LastPrice)/PriceTick-order_curr_pos+1+1+0.5,22,11,A_REVERSE,0,NULL);
 	
 	return 0;
 }
@@ -2375,7 +2399,7 @@ int order_goto_price(double price)
 	int buy_quantity = vDepthMarketDatas[i].BidVolume1;
 	double sell_price = vDepthMarketDatas[i].AskPrice1;
 	int sell_quantity = vDepthMarketDatas[i].AskVolume1;
-	double close_price=vDepthMarketDatas[i].LastPrice;
+	double LastPrice=vDepthMarketDatas[i].LastPrice;
 	double error_amount=1.0/pow(10.0,GetPrecision(vInstruments[order_symbol_index].InstrumentID))/2.0;
 	int max_ticks=(UpperLimitPrice-LowerLimitPrice)/PriceTick+1+0.5;
 	double curr_price;
@@ -2431,7 +2455,7 @@ int order_goto_price(double price)
 			mvprintw(order_curr_pos_bid-order_curr_pos+2,33,"%10d",buy_quantity);
 	}
 	mvchgat(order_curr_line+1,0,-1,A_REVERSE,0,NULL);
-	if(fabs(close_price-price)<error_amount){
+	if(fabs(LastPrice-price)<error_amount){
 		mvchgat(order_curr_line+1,22,11,A_NORMAL,0,NULL);
 		mvchgat(order_curr_line+1,22,11,A_BLINK,0,NULL);
 	}
@@ -2486,7 +2510,7 @@ void order_display_orders()
 	int buy_quantity = vDepthMarketDatas[order_symbol_index].BidVolume1;
 	double sell_price = vDepthMarketDatas[order_symbol_index].AskPrice1;
 	int sell_quantity = vDepthMarketDatas[order_symbol_index].AskVolume1;
-	double close_price=vDepthMarketDatas[order_symbol_index].LastPrice;
+	double LastPrice=vDepthMarketDatas[order_symbol_index].LastPrice;
 	double error_amount=1.0/pow(10.0,GetPrecision(vInstruments[order_symbol_index].InstrumentID))/2.0;
 
 	if(UpperLimitPrice==DBL_MAX || LowerLimitPrice==DBL_MAX)
@@ -2694,7 +2718,7 @@ void order_display_focus()
 	int buy_quantity=vDepthMarketDatas[order_symbol_index].BidVolume1;
 	double sell_price=vDepthMarketDatas[order_symbol_index].AskPrice1;
 	int sell_quantity=vDepthMarketDatas[order_symbol_index].AskVolume1;
-	double close_price=vDepthMarketDatas[order_symbol_index].LastPrice;
+	double LastPrice=vDepthMarketDatas[order_symbol_index].LastPrice;
 	double error_amount=1.0/pow(10.0,GetPrecision(vInstruments[order_symbol_index].InstrumentID))/2.0;
 	int nLine;
 
@@ -2717,8 +2741,8 @@ void order_display_focus()
 		mvchgat(order_curr_line+1,44,10,A_REVERSE,0,NULL);
 	}
 	//mvchgat(order_curr_line+1,0,-1,A_REVERSE,0,NULL);
-	if(close_price!=DBL_MAX){
-		nLine=(order_page_top_price-close_price)/PriceTick+1+0.5;
+	if(LastPrice!=DBL_MAX){
+		nLine=(order_page_top_price-LastPrice)/PriceTick+1+0.5;
 		if(nLine==order_curr_line)
 			mvchgat(order_curr_line+1,22,10,A_UNDERLINE,0,NULL);
 		else if(nLine>=1 && nLine<=order_max_lines)
@@ -2749,8 +2773,8 @@ void order_move_complete()
 	int buy_quantity = vDepthMarketDatas[order_symbol_index].BidVolume1;
 	double sell_price = vDepthMarketDatas[order_symbol_index].AskPrice1;
 	int sell_quantity = vDepthMarketDatas[order_symbol_index].AskVolume1;
-	double close_price=vDepthMarketDatas[order_symbol_index].LastPrice;
-	double prev_settle=vDepthMarketDatas[order_symbol_index].PreSettlementPrice;
+	double LastPrice=vDepthMarketDatas[order_symbol_index].LastPrice;
+	double PreSettlementPrice=vDepthMarketDatas[order_symbol_index].PreSettlementPrice;
 	double error_amount=1.0/pow(10.0,GetPrecision(vInstruments[order_symbol_index].InstrumentID))/2.0;
 
 	if(UpperLimitPrice==DBL_MAX || LowerLimitPrice==DBL_MAX)
@@ -2948,8 +2972,8 @@ void order_sell_at_limit_price(double price,unsigned int n)
 	int buy_quantity = vDepthMarketDatas[order_symbol_index].BidVolume1;
 	double sell_price = vDepthMarketDatas[order_symbol_index].AskPrice1;
 	int sell_quantity = vDepthMarketDatas[order_symbol_index].AskVolume1;
-	double close_price=vDepthMarketDatas[order_symbol_index].LastPrice;
-	double prev_settle=vDepthMarketDatas[order_symbol_index].PreSettlementPrice;
+	double LastPrice=vDepthMarketDatas[order_symbol_index].LastPrice;
+	double PreSettlementPrice=vDepthMarketDatas[order_symbol_index].PreSettlementPrice;
 	double error_amount=1.0/pow(10.0,GetPrecision(vInstruments[order_symbol_index].InstrumentID))/2.0;
 
 	if(UpperLimitPrice==DBL_MAX || LowerLimitPrice==DBL_MAX)
@@ -4558,7 +4582,7 @@ void positionlist_display_position(const char *InstrumentID)
 			x+=positionlist_column_items[POSITIONLIST_COL_MARGIN].width+1;
 			break;
 		case POSITIONLIST_COL_AMOUNT:		//Instrument.InstrumentName
-			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_AMOUNT].width,vPositions[i].Balance);
+			mvprintw(y,x,"%*.2f",positionlist_column_items[POSITIONLIST_COL_AMOUNT].width, GetPositionBalance(InstrumentID));
 			x+=positionlist_column_items[POSITIONLIST_COL_AMOUNT].width+1;
 			break;
 		case POSITIONLIST_COL_BUY_VOLUME:		//volume
@@ -5524,20 +5548,20 @@ void order_display_title()
 	double UpperLimitPrice=vDepthMarketDatas[order_symbol_index].UpperLimitPrice;
 	double LowerLimitPrice=vDepthMarketDatas[order_symbol_index].LowerLimitPrice;
 	double PriceTick=vInstruments[order_symbol_index].PriceTick;
-	double close_price=vDepthMarketDatas[order_symbol_index].LastPrice;
-	double prev_settle=vDepthMarketDatas[order_symbol_index].PreSettlementPrice;
+	double LastPrice=vDepthMarketDatas[order_symbol_index].LastPrice;
+	double PreSettlementPrice=vDepthMarketDatas[order_symbol_index].PreSettlementPrice;
 	int quantity=vDepthMarketDatas[order_symbol_index].Volume;
 	int nPosi=0,nBuyPosi=0,nSellPosi=0;
 	double AvgBuyPrice = 0, AvgSellPrice = 0;
 
 	double offset;
 	double ratio;
-	if(close_price==DBL_MAX || close_price==0 || prev_settle==DBL_MAX || prev_settle==0){
+	if(LastPrice==DBL_MAX || LastPrice==0 || PreSettlementPrice==DBL_MAX || PreSettlementPrice==0){
 		offset=0;
 		ratio=0;
 	}else{
-		offset=close_price-prev_settle;
-		ratio=(close_price-prev_settle)/prev_settle*100.0;
+		offset=LastPrice-PreSettlementPrice;
+		ratio=(LastPrice-PreSettlementPrice)/PreSettlementPrice*100.0;
 	}
 
 	std::vector<stPosition_t>::iterator iter;
@@ -5637,10 +5661,10 @@ void order_display_title()
 	//if(strlen(strsellorders)==0)
 	//	strcpy(strsellorders,"0");
 	double PL = 0;
-	if (nBuyPosi && close_price != DBL_MAX)
-		PL += (close_price - AvgBuyPrice) * nBuyPosi * vInstruments[order_symbol_index].VolumeMultiple;
-	if (nSellPosi && close_price != DBL_MAX)
-		PL += (AvgSellPrice - close_price) * nSellPosi * vInstruments[order_symbol_index].VolumeMultiple;
+	if (nBuyPosi && LastPrice != DBL_MAX)
+		PL += (LastPrice - AvgBuyPrice) * nBuyPosi * vInstruments[order_symbol_index].VolumeMultiple;
+	if (nSellPosi && LastPrice != DBL_MAX)
+		PL += (AvgSellPrice - LastPrice) * nSellPosi * vInstruments[order_symbol_index].VolumeMultiple;
 	if(nBuyPosi!=0 && nSellPosi!=0){
 		mvprintw(0,0,"%s  %.*f(%.1f%%)  ³Ö²Ö:%d*(%d/%d)  Ó¯¿÷:%.2f\n",
 			vInstruments[order_symbol_index].InstrumentName,	// ºÏÔ¼
@@ -8325,12 +8349,12 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 		if(iterInvestorPosition->PosiDirection==THOST_FTDC_PD_Long){
 			Posi.AvgBuyPrice = iterInvestorPosition->PreSettlementPrice;
 			Posi.BuyVolume = iterInvestorPosition->YdPosition;
-			Posi.Margin += Posi.AvgBuyPrice * Posi.BuyVolume * Instrument.VolumeMultiple;
+			Posi.Margin += Posi.AvgBuyPrice * Posi.BuyVolume * Instrument.VolumeMultiple * Instrument.LongMarginRatio;
 			Posi.Volume += iterInvestorPosition->YdPosition;
 		}else{
 			Posi.AvgSellPrice = iterInvestorPosition->PreSettlementPrice;
 			Posi.SellVolume = iterInvestorPosition->YdPosition;
-			Posi.Margin += Posi.AvgSellPrice * Posi.SellVolume * Instrument.VolumeMultiple;
+			Posi.Margin += Posi.AvgSellPrice * Posi.SellVolume * Instrument.VolumeMultiple * Instrument.ShortMarginRatio;
 			Posi.Volume -= iterInvestorPosition->YdPosition;
 		}
 		Posi.Price = iterInvestorPosition->PreSettlementPrice;
@@ -8349,32 +8373,37 @@ void CTradeRsp::HandleRspQryInvestorPosition(CThostFtdcInvestorPositionField& In
 				Posi.AvgBuyPrice = (Posi.AvgBuyPrice * Posi.BuyVolume + iterTrade->Price * iterTrade->Volume) / (Posi.BuyVolume + iterTrade->Volume);
 				Posi.BuyVolume+=iterTrade->Volume;
 				Posi.TodayBuyVolume+=iterTrade->Volume;
+				Posi.Margin += iterTrade->Price * iterTrade->Volume * Instrument.VolumeMultiple * Instrument.LongMarginRatio;
 			}else{
+				Posi.Margin -= Posi.Margin / (Posi.BuyVolume + Posi.SellVolume) * iterTrade->Volume;
 				if(iterTrade->OffsetFlag==THOST_FTDC_OF_CloseToday || (Posi.SellVolume-Posi.TodaySellVolume)==0)
 					Posi.TodaySellVolume-=iterTrade->Volume;
 				Posi.SellVolume-=iterTrade->Volume;
 				if (Posi.SellVolume == 0)
 					Posi.AvgSellPrice = 0;
 			}
-			Posi.Volume+=iterTrade->Volume;
 		}else{
 			if(iterTrade->OffsetFlag==THOST_FTDC_OF_Open){
 				Posi.AvgSellPrice = (Posi.AvgSellPrice * Posi.SellVolume + iterTrade->Price * iterTrade->Volume) / (Posi.SellVolume + iterTrade->Volume);
 				Posi.SellVolume+=iterTrade->Volume;
 				Posi.TodaySellVolume+=iterTrade->Volume;
+				Posi.Margin += iterTrade->Price * iterTrade->Volume * Instrument.VolumeMultiple * Instrument.ShortMarginRatio;
 			}else{
+				Posi.Margin -= Posi.Margin / (Posi.BuyVolume + Posi.SellVolume) * iterTrade->Volume;
 				if(iterTrade->OffsetFlag==THOST_FTDC_OF_CloseToday || (Posi.BuyVolume-Posi.TodayBuyVolume)==0)
 					Posi.TodayBuyVolume-=iterTrade->Volume;
 				Posi.BuyVolume-=iterTrade->Volume;
 				if (Posi.BuyVolume == 0)
 					Posi.AvgBuyPrice = 0;
 			}
-			Posi.Volume-=iterTrade->Volume;
 		}
 		if (Posi.BuyVolume > Posi.SellVolume)
 			Posi.Price = Posi.AvgBuyPrice;
 		else
 			Posi.Price = Posi.AvgSellPrice;
+		Posi.Volume = Posi.BuyVolume - Posi.SellVolume;
+		if (Posi.Volume == 0)
+			Posi.Margin = 0;
 	}
 
 
@@ -8655,35 +8684,42 @@ void CTradeRsp::HandleRtnTrade(CThostFtdcTradeField& Trade)
 				Posi.AvgBuyPrice = (Posi.AvgBuyPrice * Posi.BuyVolume + Trade.Price * Trade.Volume) / (Posi.BuyVolume + Trade.Volume);
 				Posi.BuyVolume += Trade.Volume;
 				Posi.TodayBuyVolume += Trade.Volume;
+				Posi.Margin += Trade.Price * Trade.Volume * Instrument.VolumeMultiple * Instrument.LongMarginRatio;
 			}
 			else {
+				Posi.Margin -= Posi.Margin / (Posi.BuyVolume + Posi.SellVolume) * Trade.Volume;
 				if (Trade.OffsetFlag == THOST_FTDC_OF_CloseToday || (Posi.SellVolume - Posi.TodaySellVolume) == 0)
 					Posi.TodaySellVolume -= Trade.Volume;
 				Posi.SellVolume -= Trade.Volume;
 				if(Posi.SellVolume==0)
 					Posi.AvgSellPrice = 0;
 			}
-			Posi.Volume += Trade.Volume;
 		}
 		else {
 			if (Trade.OffsetFlag == THOST_FTDC_OF_Open) {
 				Posi.AvgSellPrice = (Posi.AvgSellPrice * Posi.SellVolume + Trade.Price * Trade.Volume) / (Posi.SellVolume + Trade.Volume);
 				Posi.SellVolume += Trade.Volume;
 				Posi.TodaySellVolume += Trade.Volume;
+				Posi.Margin += Trade.Price * Trade.Volume * Instrument.VolumeMultiple * Instrument.ShortMarginRatio;
 			}
 			else {
+				Posi.Margin -= Posi.Margin / (Posi.BuyVolume + Posi.SellVolume) * Trade.Volume;
 				if (Trade.OffsetFlag == THOST_FTDC_OF_CloseToday || (Posi.BuyVolume - Posi.TodayBuyVolume) == 0)
 					Posi.TodayBuyVolume -= Trade.Volume;
 				Posi.BuyVolume -= Trade.Volume;
 				if (Posi.BuyVolume == 0)
 					Posi.AvgBuyPrice = 0;
 			}
-			Posi.Volume -= Trade.Volume;
 		}
 		if (Posi.BuyVolume > Posi.SellVolume)
 			Posi.Price = Posi.AvgBuyPrice;
 		else
 			Posi.Price = Posi.AvgSellPrice;
+		Posi.Volume = Posi.BuyVolume - Posi.SellVolume;
+		if (Posi.Volume == 0) {
+			Posi.Margin = 0;
+			Posi.Balance = 0;
+		}
 
 		switch(working_window){
 		case WIN_FILLLIST:
