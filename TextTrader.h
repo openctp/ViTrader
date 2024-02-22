@@ -160,18 +160,6 @@ public:
 	TThostFtdcBrokerIDType BrokerID;
 };
 
-
-typedef struct {
-	TThostFtdcExchangeIDType ExchangeID;
-	TThostFtdcInstrumentIDType InstrumentID;
-	int trade_volume;
-	int precision;
-	bool subscribed;
-	
-	CThostFtdcInstrumentField Instrument;
-	CThostFtdcDepthMarketDataField DepthMarketData;
-} quotation_t;
-
 typedef struct {
 	TThostFtdcBrokerIDType BrokerID;
 	TThostFtdcInvestorIDType InvestorID;
@@ -213,6 +201,8 @@ double GetBuyProfitLoss(const char* InstrumentID);
 double GetSellProfitLoss(const char* InstrumentID);
 stPosition_t& GetPosition(const char* InstrumentID);
 CThostFtdcInstrumentField& GetInstrument(const char* InstrumentID);
+CThostFtdcDepthMarketDataField& GetDepthMarketData(const char* InstrumentID);
+int GetPrecision(const char* InstrumentID);
 
 // Main Board
 void refresh_screen();
@@ -382,7 +372,7 @@ void positionlist_display_status();
 void positionlist_display_focus();
 void positionlist_redraw();
 void positionlist_reset();
-void positionlist_display_position(const char* szAccID, const char* szExchangeID, const char* szInstrumentID);
+void positionlist_display_position(const char* szInstrumentID);
 int on_key_pressed_positionlist(int ch);
 int goto_mainboard_window_from_positionlist();
 int goto_order_window_from_positionlist();
