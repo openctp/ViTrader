@@ -1,4 +1,4 @@
-# TextTrader操作手册
+# ViTrader（原TextTrader）操作手册
 
 ​       版本1.0
 
@@ -7,9 +7,9 @@
 ![1616771807(1)](https://user-images.githubusercontent.com/83346523/120349092-611bf200-c330-11eb-8bd1-326adc7f7900.png)
 
 ### 简介
-TextTrader是一款命令行交易客户端，操作命令基本同VI编辑器，集交易与行情于一体，支持支持Windows、Linux、MacOS、FreeBSD等操作系统。
+ViTrader是一款命令行交易客户端，操作命令基本同Vi编辑器，集交易与行情于一体，支持支持Windows、Linux、MacOS、FreeBSD等操作系统。
 
-TextTrader支持CTP期货交易柜台，也支持采用CTP兼容接口的其它平台（[CTP开放平台](https://github.com/krenx1983/openctp)）。
+ViTrader支持CTP期货交易柜台，也支持采用CTP兼容接口的其它平台（[CTP开放平台](https://github.com/openctp/openctp)）。
 
 采用自动开平模式，不需要手动指定开平。
 
@@ -29,9 +29,9 @@ MacOSX:
 build/MacOSX目录下，执行make，或打开xcode工程编译。
 
 ### 安装包
-已编译好Win32、Linux、Mac版本，绿色无需安装，如需要接入openctp、华鑫、中泰等柜台需要更换dll，各柜台CTPAPI的dll下载链接:[dll下载](http://121.37.80.177:50080/download.html)。
+已编译好Win32、Linux、Mac版本，绿色无需安装，如需要接入openctp、华鑫、中泰等柜台需要更换dll，各柜台CTPAPI的dll下载链接:[CTPAPI下载](http://121.37.80.177:50080/download.html)。
 
-下载链接:[TextTrader下载](http://121.37.80.177:50080/Download/TextTrader/TextTrader.zip)
+下载链接:[ViTrader下载](http://121.37.80.177:50080/Download/TextTrader/TextTrader.zip)
 
 ### 移动命令（所有窗口通用）： 
 
